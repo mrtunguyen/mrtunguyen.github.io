@@ -4,7 +4,7 @@
     "href": "about.html",
     "title": "About",
     "section": "",
-    "text": "About this blog"
+    "text": "Hi,\nThis is a place where I’m documenting my learning notes, sharing my ideas, thoughts about machine learning/deep learning.\nDrop me an email at thanhtu19392 AT gmail.com if you have any questions or just want a discussion.\nThanks."
   },
   {
     "objectID": "posts/2019-10-17-Kaggle-Modecular-Competition.html",
@@ -112,20 +112,6 @@
     "text": "PixelSNAIL\nWe’ve already covered a lot til now (Yeah! I know…). The last model we will review is PixelSNAIL which adopt masked self-attention approaches inspired by SNAIL.\nThe key idea behind PixelSNAIL is to introduce attention blocks, in a style similar to Self Attention, into neural autoregressive modelling.\nThe PixelSNAIL model is composed of two blocks:\n\nResidual block: This block is as same as gated unit block in PixelCNN that we’ve seen so far.\nAttention block: This block performs a single key-value lookup. It projects the input to a lower dimensionality to produce the keys and values and then uses softmax-attention like in Transformer model.\n\n\nThe way how PixelSNAIL integrated self-attention blocks is quite interesting because it allows to model long-range depenencies between pixels in image, equip all conditionals with the ability to refer to all of their available context. Moreover, each conditional can access any pixels in its context through the attention operator, easy information access of remote pixels improves modeling of long-range statistics.\n\n\nFlexible ordering\nWe’ve seen in PixelCNN or other architectures, the pixel ordering is raster scanning where along each row left pixels come before right pixels and top rows come before bottom rows. The raster scan order-ing only has a small number neighboring pixels available in the conditioning context \\(\\bf x_1, . . . , x_{i−1}\\): only to the left and above and most of the context is wasted on regions that might have little correlation with the current pixel like the far top-right corner. Since we can access any pixels in its context through attention operator, PixelSNAIL allows zigzag ordering."
   },
   {
-    "objectID": "posts/post-with-code/index.html",
-    "href": "posts/post-with-code/index.html",
-    "title": "Post With Code",
-    "section": "",
-    "text": "This is a post with executable code."
-  },
-  {
-    "objectID": "posts/welcome/index.html",
-    "href": "posts/welcome/index.html",
-    "title": "Welcome To My Blog",
-    "section": "",
-    "text": "This is the first post in a Quarto blog. Welcome!\n\nSince this post doesn’t specify an explicit image, the first image in the post will be used in the listing page of posts."
-  },
-  {
     "objectID": "posts/2020-06-07-tabular_feature_engineering_tricks.html",
     "href": "posts/2020-06-07-tabular_feature_engineering_tricks.html",
     "title": "Tabular feature engineering tricks",
@@ -156,8 +142,8 @@
   {
     "objectID": "index.html",
     "href": "index.html",
-    "title": "mrtunguyen.github.io",
+    "title": "Machine learning Blog",
     "section": "",
-    "text": "Post With Code\n\n\n\n\n\n\n\nnews\n\n\ncode\n\n\nanalysis\n\n\n\n\n\n\n\n\n\n\n\nAug 25, 2023\n\n\nHarlow Malloc\n\n\n\n\n\n\n  \n\n\n\n\nWelcome To My Blog\n\n\n\n\n\n\n\nnews\n\n\n\n\n\n\n\n\n\n\n\nAug 22, 2023\n\n\nTristan O’Malley\n\n\n\n\n\n\n  \n\n\n\n\nTabular feature engineering tricks\n\n\n\n\n\n\n\ntabular\n\n\nfeature-engineering\n\n\n\n\nSome useful tricks when doing feature engineering on tabular dataset\n\n\n\n\n\n\nJun 7, 2020\n\n\nTu NGUYEN\n\n\n\n\n\n\n  \n\n\n\n\nAutoregressive Generative Models\n\n\n\n\n\n\n\ngenerative\n\n\nautoregressive\n\n\ndeeplearning\n\n\n\n\nA complete overview on Autoregressive Generative Models (MADE, PixelCNN families, WaveNet, Seft-Attention, PixelSNAIL) with implementation code\n\n\n\n\n\n\nMay 20, 2020\n\n\nTu NGUYEN\n\n\n\n\n\n\n  \n\n\n\n\nKaggle Molecular Competition: Lessons Learned from Finishing in Top 5\n\n\n\n\n\n\n\nkaggle\n\n\n\n\nTricks and lessons I have learned from getting into top 5 of Kaggle Molecular Competition\n\n\n\n\n\n\nOct 17, 2019\n\n\n\n\n\n\nNo matching items"
+    "text": "Tabular feature engineering tricks\n\n\n\n\n\n\n\ntabular\n\n\nfeature-engineering\n\n\n\n\nSome useful tricks when doing feature engineering on tabular dataset\n\n\n\n\n\n\nJun 7, 2020\n\n\nTu NGUYEN\n\n\n\n\n\n\n  \n\n\n\n\nAutoregressive Generative Models\n\n\n\n\n\n\n\ngenerative\n\n\nautoregressive\n\n\ndeeplearning\n\n\n\n\nA complete overview on Autoregressive Generative Models (MADE, PixelCNN families, WaveNet, Seft-Attention, PixelSNAIL) with implementation code\n\n\n\n\n\n\nMay 20, 2020\n\n\nTu NGUYEN\n\n\n\n\n\n\n  \n\n\n\n\nKaggle Molecular Competition: Lessons Learned from Finishing in Top 5\n\n\n\n\n\n\n\nkaggle\n\n\n\n\nTricks and lessons I have learned from getting into top 5 of Kaggle Molecular Competition\n\n\n\n\n\n\nOct 17, 2019\n\n\n\n\n\n\nNo matching items"
   }
 ]
