@@ -6,14 +6,19 @@ about:
   links:
     - icon: twitter
       text: Twitter
-      href: https://twitter.com
+      href: https://twitter.com/jonathan_ttu
     - icon: linkedin
       text: LinkedIn
-      href: https://linkedin.com
+      href: https://www.linkedin.com/in/thanh-tu/
     - icon: github
       text: Github
-      href: https://github.com
+      href: https://github.com/mrtunguyen
 
 ---
 
-About this blog
+Hi,
+
+This is a place where I'm documenting my learning notes, sharing my ideas, thoughts about machine learning/deep learning.  
+Drop me an email at thanhtu19392 AT gmail.com if you have any questions or just want a discussion. 
+
+Thanks.

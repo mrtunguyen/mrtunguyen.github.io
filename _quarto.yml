@@ -2,14 +2,14 @@ project:
   type: website
 
 website:
-  title: "mrtunguyen.github.io"
+  title: "Machine learning Blog"
   navbar:
     right:
       - about.qmd
       - icon: github
-        href: https://github.com/
+        href: https://github.com/mrtunguyen
       - icon: twitter
-        href: https://twitter.com
+        href: https://twitter.com/jonathan_ttu
 format:
   html:
     theme: cosmo
