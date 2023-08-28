@@ -1,5 +1,5 @@
 ---
-title: "Jonathan Tu Nguyen"
+title: "About me"
 image: profile.jpg
 about:
   template: trestles
@@ -18,8 +18,11 @@ about:
 
 I'm Jonathan Tu Nguyen, a machine learning engineer. 
 
-I'm a senior machine learning engineer at [Voodoo](https://www.voodoo.io/), where I build a bidding system that allows app developers to rapidly monetize their apps by leveraging machine learning and predictive algorithms. Previously, I built a system for extracting relevant information from documents and a speech recognition system that automate the manual process which consists of translating audio calls into text and making business insights from that. 
-My technical stack includes working with state-of-the-art machine learning models in recommendation systems, bandit, and statistical models (winning rate probability or click-through rate), computer vision, NLP and putting them into deployment at scale with modern tech frameworks to serve our very large base of users. 
+I'm a senior machine learning engineer at [Voodoo](https://www.voodoo.io/), where I build a bidding system that allows app developers to rapidly monetize their apps by leveraging machine learning and predictive algorithms. 
+
+Previously, I built a system for extracting relevant information from documents and a speech recognition system that automate the manual process which consists of translating audio calls into text and making business insights from that at BNP Paribas.
+My technical stack includes working with state-of-the-art machine learning models in recommendation systems, bandit, and statistical models (winning rate probability or click-through rate), computer vision, NLP and putting them into deployment at scale 
+with modern tech frameworks to serve our very large base of users. 
 
 In my free time, I travel, read, build side projects and participate Kaggle. 
 
