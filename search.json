@@ -2,7 +2,7 @@
   {
     "objectID": "about.html",
     "href": "about.html",
-    "title": "About",
+    "title": "Jonathan Tu Nguyen",
     "section": "",
     "text": "Hi,\nThis is a place where I’m documenting my learning notes, sharing my ideas, thoughts about machine learning/deep learning.\nDrop me an email at thanhtu19392 AT gmail.com if you have any questions or just want a discussion.\nThanks."
   },
@@ -144,6 +144,6 @@
     "href": "index.html",
     "title": "Machine learning Blog",
     "section": "",
-    "text": "Tabular feature engineering tricks\n\n\n\n\n\n\n\ntabular\n\n\nfeature-engineering\n\n\n\n\nSome useful tricks when doing feature engineering on tabular dataset\n\n\n\n\n\n\nJun 7, 2020\n\n\nTu NGUYEN\n\n\n\n\n\n\n  \n\n\n\n\nAutoregressive Generative Models\n\n\n\n\n\n\n\ngenerative\n\n\nautoregressive\n\n\ndeeplearning\n\n\n\n\nA complete overview on Autoregressive Generative Models (MADE, PixelCNN families, WaveNet, Seft-Attention, PixelSNAIL) with implementation code\n\n\n\n\n\n\nMay 20, 2020\n\n\nTu NGUYEN\n\n\n\n\n\n\n  \n\n\n\n\nKaggle Molecular Competition: Lessons Learned from Finishing in Top 5\n\n\n\n\n\n\n\nkaggle\n\n\n\n\nTricks and lessons I have learned from getting into top 5 of Kaggle Molecular Competition\n\n\n\n\n\n\nOct 17, 2019\n\n\n\n\n\n\nNo matching items"
+    "text": "Tabular feature engineering tricks\n\n\n\n\n\n\n\ntabular\n\n\nfeature-engineering\n\n\n\n\nSome useful tricks when doing feature engineering on tabular dataset\n\n\n\n\n\n\nJun 7, 2020\n\n\nTu NGUYEN\n\n\n\n\n\n\n  \n\n\n\n\nAutoregressive Generative Models\n\n\n\n\n\n\n\ngenerative\n\n\nautoregressive\n\n\ndeeplearning\n\n\n\n\nA complete overview on Autoregressive Generative Models (MADE, PixelCNN families, WaveNet, Seft-Attention, PixelSNAIL) with implementation code\n\n\n\n\n\n\nMay 20, 2020\n\n\nTu NGUYEN\n\n\n\n\n\n\n  \n\n\n\n\nKaggle Molecular Competition: Lessons Learned from Finishing in Top 5\n\n\n\n\n\n\n\nkaggle, graph neural network\n\n\n\n\nTricks and lessons I have learned from getting into top 5 of Kaggle Molecular Competition\n\n\n\n\n\n\nOct 17, 2019\n\n\n\n\n\n\nNo matching items"
   }
 ]
