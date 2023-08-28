@@ -1,8 +1,8 @@
 ---
-title: "About"
+title: "Jonathan Tu Nguyen"
 image: profile.jpg
 about:
-  template: jolla
+  template: trestles
   links:
     - icon: twitter
       text: Twitter

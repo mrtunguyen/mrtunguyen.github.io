@@ -2,13 +2,14 @@
 aliases:
 - /kaggle/2019/10/17/Kaggle-Modecular-Competition
 categories:
-- kaggle
+- kaggle, graph neural network 
 date: '2019-10-17'
 description: Tricks and lessons I have learned from getting into top 5 of Kaggle Molecular
   Competition
 layout: post
 title: 'Kaggle Molecular Competition: Lessons Learned from Finishing in Top 5'
 toc: true
+image: assets/kaggle.png
 
 ---
 
