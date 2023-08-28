@@ -1,14 +1,13 @@
 ---
-aliases:
-- /kaggle/2019/10/17/Kaggle-Modecular-Competition
 categories:
-- LLM, llama 2
+- LLM
+- Llama 2
 date: '2023-08-21'
 description: LLaMA 2, the successor of the original LLaMA 1, is a large language model created by Meta. 
 layout: post
 title: 'Everything you need to know about Llama 2'
 toc: true
-
+image: llama2.png
 ---
 
 # Everything you need to know about Llama 2
@@ -51,14 +50,14 @@ unique URL you need to initiate the download from GitHub.
 
 - In the [annoucement](https://ai.meta.com/llama/) of Meta, they claim that Llama 2 outperforms other open source language models on many external benchmarks, including reasoning, coding, proficiency, and knowledge tests.
     
-    ![Untitled](Everything%20you%20need%20to%20know%20about%20Llama%202%20922143286f6e4663b0a38c3e29d20f56/Untitled.png)
+    ![Untitled](benchmark.png)
     
 
 - In the [Huggingface Open LLM Leaderboard](https://huggingface.co/spaces/HuggingFaceH4/open_llm_leaderboard), the top ranking is flooded by the base model Llama 2 and its instruction-tuned models.
 - This is the first time we can see an open LLM model is **on the level of ChatGPT (except in coding), while t**here is still a large gap in performance between Llama 2 70B and GPT-4
 and PaLM-2-L. **** [Source](https://arxiv.org/pdf/2307.09288.pdf)
     
-    ![Capture d’écran 2023-08-01 à 14.26.23.png](Everything%20you%20need%20to%20know%20about%20Llama%202%20922143286f6e4663b0a38c3e29d20f56/Capture_decran_2023-08-01_a_14.26.23.png)
+    ![Capture d’écran 2023-08-01 à 14.26.23.png](benchmark2.png)
     
 
 # How to finetune Llama 2 with our own data?
@@ -115,7 +114,7 @@ In summary, the key points about preference data:
 - I**terative collection for distribution management**: "Human annotations were collected in batches on a weekly basis. As we collected more preference data, our reward models improved, and we were able to train progressively better versions for Llama 2-Chat"
 - The team added additional **safety metadata** to the collection showcasing which responses are safe from the models at each turn. When this is passed to the modeling phase, they "do not include any examples where the chosen response was unsafe and the other response safe, as we believe safer responses will also be better/preferred by humans."
 
-![Capture d’écran 2023-08-03 à 00.27.00.png](Everything%20you%20need%20to%20know%20about%20Llama%202%20922143286f6e4663b0a38c3e29d20f56/Capture_decran_2023-08-03_a_00.27.00.png)
+![Capture d’écran 2023-08-03 à 00.27.00.png](preference-data-training.png)
 
 ## How to train reward models?
 
@@ -128,7 +127,7 @@ of the pretrained language models, except that the classification head for next-
 
 ## What is training process of Llama 2-chat?
 
-![Untitled](Everything%20you%20need%20to%20know%20about%20Llama%202%20922143286f6e4663b0a38c3e29d20f56/Untitled%201.png)
+![Untitled](training-llama2-chat.png)
 
 # Examples & Recipes
 
