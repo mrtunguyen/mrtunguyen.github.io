@@ -155,11 +155,11 @@ ul.task-list li input[type="checkbox"] {
   </ul></li>
   <li><a href="#retrieval-component" id="toc-retrieval-component" class="nav-link" data-scroll-target="#retrieval-component">Retrieval Component</a>
   <ul class="collapse">
-  <li><a href="#how-are-embeddings-generated" id="toc-how-are-embeddings-generated" class="nav-link" data-scroll-target="#how-are-embeddings-generated">****How are embeddings generated?****</a>
+  <li><a href="#how-are-embeddings-generated" id="toc-how-are-embeddings-generated" class="nav-link" data-scroll-target="#how-are-embeddings-generated">How are embeddings generated?</a>
   <ul class="collapse">
-  <li><a href="#openai-embeddings" id="toc-openai-embeddings" class="nav-link" data-scroll-target="#openai-embeddings"><strong>OpenAI embeddings</strong></a></li>
-  <li><a href="#sentence-transformers" id="toc-sentence-transformers" class="nav-link" data-scroll-target="#sentence-transformers"><strong>Sentence Transformers</strong></a></li>
-  <li><a href="#instructor-model-embedding" id="toc-instructor-model-embedding" class="nav-link" data-scroll-target="#instructor-model-embedding"><strong>Instructor Model Embedding</strong></a></li>
+  <li><a href="#openai-embeddings" id="toc-openai-embeddings" class="nav-link" data-scroll-target="#openai-embeddings">OpenAI embeddings</a></li>
+  <li><a href="#sentence-transformers" id="toc-sentence-transformers" class="nav-link" data-scroll-target="#sentence-transformers">Sentence Transformers</a></li>
+  <li><a href="#instructor-model-embedding" id="toc-instructor-model-embedding" class="nav-link" data-scroll-target="#instructor-model-embedding">Instructor Model Embedding</a></li>
   </ul></li>
   <li><a href="#approximate-nearest-neighbors-ann" id="toc-approximate-nearest-neighbors-ann" class="nav-link" data-scroll-target="#approximate-nearest-neighbors-ann">A<strong>pproximate nearest neighbors (ANN)</strong></a></li>
   <li><a href="#indexing-technique" id="toc-indexing-technique" class="nav-link" data-scroll-target="#indexing-technique">Indexing Technique</a>
@@ -187,12 +187,12 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#tune-different-indexing-chunking-approaches" id="toc-tune-different-indexing-chunking-approaches" class="nav-link" data-scroll-target="#tune-different-indexing-chunking-approaches">Tune different indexing / chunking approaches</a></li>
   <li><a href="#adding-meta-data-for-filtering" id="toc-adding-meta-data-for-filtering" class="nav-link" data-scroll-target="#adding-meta-data-for-filtering">Adding meta-data for filtering</a></li>
   <li><a href="#iterate-over-your-prompt" id="toc-iterate-over-your-prompt" class="nav-link" data-scroll-target="#iterate-over-your-prompt">Iterate over your prompt</a></li>
-  <li><a href="#fine-tune-your-embedding-model." id="toc-fine-tune-your-embedding-model." class="nav-link" data-scroll-target="#fine-tune-your-embedding-model."><strong>Fine-tune your embedding model.</strong></a></li>
+  <li><a href="#fine-tune-your-embedding-model." id="toc-fine-tune-your-embedding-model." class="nav-link" data-scroll-target="#fine-tune-your-embedding-model.">Fine-tune your embedding model.</a></li>
   </ul></li>
   <li><a href="#retrieval-logic" id="toc-retrieval-logic" class="nav-link" data-scroll-target="#retrieval-logic">Retrieval Logic</a>
   <ul class="collapse">
-  <li><a href="#decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" id="toc-decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" class="nav-link" data-scroll-target="#decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis">****Decoupling Chunks Used for Retrieval vs.&nbsp;Chunks Used for Synthesis****</a></li>
-  <li><a href="#structured-retrieval-for-larger-document-sets" id="toc-structured-retrieval-for-larger-document-sets" class="nav-link" data-scroll-target="#structured-retrieval-for-larger-document-sets">****Structured Retrieval for Larger Document Sets****</a></li>
+  <li><a href="#decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" id="toc-decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" class="nav-link" data-scroll-target="#decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis">Decoupling Chunks Used for Retrieval vs.&nbsp;Chunks Used for Synthesis</a></li>
+  <li><a href="#structured-retrieval-for-larger-document-sets" id="toc-structured-retrieval-for-larger-document-sets" class="nav-link" data-scroll-target="#structured-retrieval-for-larger-document-sets">Structured Retrieval for Larger Document Sets</a></li>
   </ul></li>
   <li><a href="#caching" id="toc-caching" class="nav-link" data-scroll-target="#caching">Caching</a>
   <ul class="collapse">
@@ -211,7 +211,12 @@ ul.task-list li input[type="checkbox"] {
 
 <p>Large language models (LLMs) have unquestionably revolutionized the way we engage with information. Nevertheless, they are not without their limitations, particularly regarding the scope of queries they can effectively handle. Base LLMs (e.g., Llama-2, gpt-series, etc.) are limited to the knowledge contained within their training data, making them less adept at responding to inquiries that demand knowledge beyond their training set.</p>
 <p>Retrieval augmented generation (RAG)-based LLM applications directly tackle this challenge, enabling LLMs to tap into our domain-specific data sources and significantly expand their capacity to provide relevant information.</p>
-<p>[Untitled](What%20you%20should%20know%20about%20RAG%20(Retrieved-Augmente%205ffd27cf98504d6ca45823cc8e3b118d/Untitled.png)</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/Untitled.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Untitled</figcaption>
+</figure>
+</div>
 <ol type="1">
 <li><strong>Access to External Knowledge</strong>: Large language models (LLMs) like GPT-3 or GPT-4 have limitations in terms of the knowledge they possess. They are primarily trained on large text corpora but may not have access to specific or up-to-date information from external sources. RAG allows these models to tap into external knowledge bases, databases, documents, or the web to retrieve relevant and accurate information.</li>
 <li><strong>Domain-Specific Expertise</strong>: In many applications, users require domain-specific expertise or information that goes beyond the general knowledge contained in LLMs. RAG enables LLMs to access domain-specific databases or documents, providing specialized answers to queries.</li>
@@ -243,7 +248,12 @@ ul.task-list li input[type="checkbox"] {
 <section id="retrieval-component" class="level1 page-columns page-full">
 <h1>Retrieval Component</h1>
 <p><strong>Hybrid retrieval</strong>, which encompasses both traditional search indexing and embedding-based search, usually yields superior results compared to using either method in isolation. For example, we can complement classical retrieval (BM25 via OpenSearch) with semantic search (<code>e5-small-v2</code>).</p>
-<p>[Untitled](What%20you%20should%20know%20about%20RAG%20(Retrieved-Augmente%205ffd27cf98504d6ca45823cc8e3b118d/Untitled%201.png)</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/Untitled 1.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Untitled</figcaption>
+</figure>
+</div>
 <p><strong>Why not rely solely on embedding-based search?</strong></p>
 <p>While embedding-based search excels in many scenarios, it has limitations that become apparent in specific situations, including:</p>
 <ul>
@@ -254,18 +264,18 @@ ul.task-list li input[type="checkbox"] {
 <p><strong>Why not keyword-based search only?</strong></p>
 <p>However, it’s important to note that keyword-based search also has its constraints. It primarily models basic word frequencies and lacks the ability to capture semantic nuances or correlations. Consequently, it struggles with synonyms and hypernyms (words that represent generalizations). This is where the synergy of combining keyword search with semantic search proves advantageous.</p>
 <section id="how-are-embeddings-generated" class="level2 page-columns page-full">
-<h2 class="anchored" data-anchor-id="how-are-embeddings-generated">****How are embeddings generated?****</h2>
+<h2 class="anchored" data-anchor-id="how-are-embeddings-generated">How are embeddings generated?</h2>
 <section id="openai-embeddings" class="level3">
-<h3 class="anchored" data-anchor-id="openai-embeddings"><strong>OpenAI embeddings</strong></h3>
+<h3 class="anchored" data-anchor-id="openai-embeddings">OpenAI embeddings</h3>
 <p><strong>With regard to embeddings</strong>, the seemingly popular approach is to use <code>[text-embedding-ada-002](https://openai.com/blog/new-and-improved-embedding-model)</code>. Its benefits include ease of use via an API and not having to maintain our own embedding infra or self-host embedding models. Nonetheless, personal experience and anecdotes from others suggest there are better alternatives for retrieval.</p>
 <p>The OG embedding approaches include Word2vec and <a href="https://fasttext.cc/">fastText</a>. FastText is an open-source, lightweight library that enables users to leverage pre-trained embeddings or train new embedding models. It comes with pre-trained embeddings for 157 languages and is extremely fast, even without a GPU. It’s my go-to for early-stage proof of concepts.</p>
 </section>
 <section id="sentence-transformers" class="level3">
-<h3 class="anchored" data-anchor-id="sentence-transformers"><a href="https://github.com/UKPLab/sentence-transformers"><strong>Sentence Transformers</strong></a></h3>
+<h3 class="anchored" data-anchor-id="sentence-transformers"><a href="https://github.com/UKPLab/sentence-transformers">Sentence Transformers</a></h3>
 <p>It makes it simple to compute embeddings for sentences, paragraphs, and even images. It’s based on workhorse transformers such as BERT and RoBERTa and is available in more than 100 languages.</p>
 </section>
 <section id="instructor-model-embedding" class="level3 page-columns page-full">
-<h3 class="anchored" data-anchor-id="instructor-model-embedding"><strong>Instructor Model Embedding</strong></h3>
+<h3 class="anchored" data-anchor-id="instructor-model-embedding">Instructor Model Embedding</h3>
 <p>More recently, instructor models have shown SOTA performance. During training, these models prepend the task description to the text. Then, when embedding new text, we simply have to describe the task to get task-specific embeddings. (Not that different from instruction tuning for embedding models IMHO.)</p>
 <p>An example is the <a href="https://arxiv.org/abs/2212.03533">E5</a> family of models. For open QA and information retrieval, we simply prepend documents in the index with <code>passage:</code>, and prepend queries with <code>query:</code>. If the task is symmetric (e.g., semantic similarity, paraphrase retrieval) or if we want to use embeddings as features (e.g., classification, clustering), we just use the <code>query:</code> prefix.</p>
 <p>The <a href="https://arxiv.org/abs/2212.09741">Instructor</a> model takes it a step further, allowing users to customize the prepended prompt: “Represent the <code>domain</code> <code>task_type</code> for the <code>task_objective</code>:” For example, “Represent the Wikipedia document for retrieval:”. (The domain and task objective are optional). This brings the concept of prompt tuning into the field of text embedding.</p>
@@ -441,7 +451,12 @@ Recall_{\text{BERT}} = \frac{1}{|r|} \sum_{i \in r} \max_{j \in p} \vec{i}^T \ve
 \]</span></p>
 <p>BERTScore is useful because it can account for synonyms and paraphrasing. Simpler metrics like BLEU and ROUGE can’t do this due to their reliance on exact matches. BERTScore has been shown to have better correlation for tasks such as image captioning and machine translation.</p>
 <p><strong><a href="https://arxiv.org/abs/1909.02622">MoverScore</a></strong>&nbsp;also uses contextualized embeddings to compute the distance between tokens in the generated output and reference. But unlike BERTScore, which is based on one-to-one matching (or “hard alignment”) of tokens, MoverScore allows for many-to-one matching (or “soft alignment”).</p>
-<p>[Untitled](What%20you%20should%20know%20about%20RAG%20(Retrieved-Augmente%205ffd27cf98504d6ca45823cc8e3b118d/Untitled%202.png)</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="images/Untitled 2.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Untitled</figcaption>
+</figure>
+</div>
 <p><strong>Use a strong LLM as a reference-free metric</strong></p>
 <p>Ideally, we would have humans interpret if the output quality is good. Human raters, however, are extremely resource-intensive and not practical at scale. GPT-4 has been used as a fairly good proxy to human-raters. You may want to consider prompt engineering techniques such as&nbsp;<a href="https://www.promptingguide.ai/techniques/fewshot">few shot prompting</a>,&nbsp;<a href="https://www.promptingguide.ai/techniques/cot">chain-of-thought</a>, and&nbsp;<a href="https://www.promptingguide.ai/techniques/consistency">self-consistency</a>&nbsp;to generate more reliable evaluation results from GPT-4.</p>
 </section>
@@ -479,18 +494,18 @@ Recall_{\text{BERT}} = \frac{1}{|r|} \sum_{i \in r} \max_{j \in p} \vec{i}^T \ve
 <h3 class="anchored" data-anchor-id="iterate-over-your-prompt">Iterate over your prompt</h3>
 </section>
 <section id="fine-tune-your-embedding-model." class="level3">
-<h3 class="anchored" data-anchor-id="fine-tune-your-embedding-model."><strong>Fine-tune your embedding model.</strong></h3>
+<h3 class="anchored" data-anchor-id="fine-tune-your-embedding-model.">Fine-tune your embedding model.</h3>
 <p>Finetuning a model means updating the model itself over a set of data to improve the model in a variety of ways. This can include improving the quality of outputs, reducing hallucinations, memorizing more data holistically, and reducing latency/cost. Finetuning the embedding model can allow for more meaningful embedding representations over a training distribution of data –&gt; leads to better retrieval performance.</p>
 </section>
 </section>
 <section id="retrieval-logic" class="level2">
 <h2 class="anchored" data-anchor-id="retrieval-logic">Retrieval Logic</h2>
 <section id="decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" class="level3">
-<h3 class="anchored" data-anchor-id="decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis">****Decoupling Chunks Used for Retrieval vs.&nbsp;Chunks Used for Synthesis****</h3>
+<h3 class="anchored" data-anchor-id="decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis">Decoupling Chunks Used for Retrieval vs.&nbsp;Chunks Used for Synthesis</h3>
 <p>The most effective way to represent information for retrieval could differ from the most effective approach for synthesis. For example, a raw text chunk may provide essential details that help the language model generate a comprehensive response to a query. However, it might also contain extraneous filler words or information that could skew the embedding representation. Additionally, it may lack sufficient global context and might not be retrieved when a relevant query is received. In that sense, we can embed a document summary, which links to chunks associated with the document or embed a sentence which links to a window around the sentence.</p>
 </section>
 <section id="structured-retrieval-for-larger-document-sets" class="level3">
-<h3 class="anchored" data-anchor-id="structured-retrieval-for-larger-document-sets">****Structured Retrieval for Larger Document Sets****</h3>
+<h3 class="anchored" data-anchor-id="structured-retrieval-for-larger-document-sets">Structured Retrieval for Larger Document Sets</h3>
 <p>A significant drawback of the standard RAG stack, which involves top-k retrieval and basic text splitting, becomes evident when dealing with a large number of documents, such as 100 different PDFs. In this scenario, when you have a query, it’s often essential to utilize structured information to enhance precision in retrieval. For instance, if your question pertains to only two specific PDFs, relying solely on raw embedding similarity with text chunks may not be sufficient.</p>
 <p>One effective approach to address this issue is to embed document summaries and establish a mapping to text chunks within each document. This enables retrieval at the document level initially, prioritizing the identification of relevant documents before delving into chunk-level analysis.</p>
 </section>
@@ -507,10 +522,9 @@ Recall_{\text{BERT}} = \frac{1}{|r|} \sum_{i \in r} \max_{j \in p} \vec{i}^T \ve
 <section id="reference" class="level1">
 <h1>Reference</h1>
 <ol type="1">
-<li>**<a href="https://www.notion.so/Retrieval-Augmented-Generation-RAG-453d3fd10527440a97285f52083623fb?pvs=21">ACL 2023 Tutorial**</a></li>
+<li><a href="https://www.notion.so/Retrieval-Augmented-Generation-RAG-453d3fd10527440a97285f52083623fb?pvs=21">ACL 2023 Tutorial</a></li>
 <li><a href="https://huggingface.co/spaces/mteb/leaderboard">Massive Text Embedding Benchmark (MTEB) leaderboard.</a><br>
 </li>
-<li>[RAG is more than just embedding search](What%20you%20should%20know%20about%20RAG%20(Retrieved-Augmente%205ffd27cf98504d6ca45823cc8e3b118d.md)</li>
 <li><a href="https://github.com/erikbern/ann-benchmarks">Benchmarks of approximate nearest neighbor libraries in Python</a></li>
 <li><a href="https://towardsdatascience.com/10-ways-to-improve-the-performance-of-retrieval-augmented-generation-systems-5fa2cee7cd5c">10 Ways to Improve the Performance of Retrieval Augmented Generation Systems</a></li>
 <li><a href="https://thedataquarry.com/posts/vector-db-3/">Not all indexes are created equal</a></li>
