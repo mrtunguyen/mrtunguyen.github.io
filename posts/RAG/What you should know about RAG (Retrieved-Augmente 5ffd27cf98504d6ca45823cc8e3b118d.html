@@ -204,7 +204,7 @@ ul.task-list li input[type="checkbox"] {
 </nav>
     </div>
 <!-- main -->
-<main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
@@ -245,7 +245,7 @@ ul.task-list li input[type="checkbox"] {
 <p>Prototyping a RAG application is easy, but making it performant, robust, and scalable to a large knowledge corpus is hard. While we can easily find many tutorials online with only 10 lines of code telling how easy it is to do a RAG over your own documents, the big challenge still sits there with big number of documents to ingest in production, many queries at the same time with a large number of users etc.</p>
 </section>
 </section>
-<section id="retrieval-component" class="level1 page-columns page-full">
+<section id="retrieval-component" class="level1">
 <h1>Retrieval Component</h1>
 <p><strong>Hybrid retrieval</strong>, which encompasses both traditional search indexing and embedding-based search, usually yields superior results compared to using either method in isolation. For example, we can complement classical retrieval (BM25 via OpenSearch) with semantic search (<code>e5-small-v2</code>).</p>
 <div class="quarto-figure quarto-figure-center">
@@ -263,7 +263,7 @@ ul.task-list li input[type="checkbox"] {
 </ul>
 <p><strong>Why not keyword-based search only?</strong></p>
 <p>However, it’s important to note that keyword-based search also has its constraints. It primarily models basic word frequencies and lacks the ability to capture semantic nuances or correlations. Consequently, it struggles with synonyms and hypernyms (words that represent generalizations). This is where the synergy of combining keyword search with semantic search proves advantageous.</p>
-<section id="how-are-embeddings-generated" class="level2 page-columns page-full">
+<section id="how-are-embeddings-generated" class="level2">
 <h2 class="anchored" data-anchor-id="how-are-embeddings-generated">How are embeddings generated?</h2>
 <section id="openai-embeddings" class="level3">
 <h3 class="anchored" data-anchor-id="openai-embeddings">OpenAI embeddings</h3>
@@ -274,15 +274,15 @@ ul.task-list li input[type="checkbox"] {
 <h3 class="anchored" data-anchor-id="sentence-transformers"><a href="https://github.com/UKPLab/sentence-transformers">Sentence Transformers</a></h3>
 <p>It makes it simple to compute embeddings for sentences, paragraphs, and even images. It’s based on workhorse transformers such as BERT and RoBERTa and is available in more than 100 languages.</p>
 </section>
-<section id="instructor-model-embedding" class="level3 page-columns page-full">
+<section id="instructor-model-embedding" class="level3">
 <h3 class="anchored" data-anchor-id="instructor-model-embedding">Instructor Model Embedding</h3>
 <p>More recently, instructor models have shown SOTA performance. During training, these models prepend the task description to the text. Then, when embedding new text, we simply have to describe the task to get task-specific embeddings. (Not that different from instruction tuning for embedding models IMHO.)</p>
 <p>An example is the <a href="https://arxiv.org/abs/2212.03533">E5</a> family of models. For open QA and information retrieval, we simply prepend documents in the index with <code>passage:</code>, and prepend queries with <code>query:</code>. If the task is symmetric (e.g., semantic similarity, paraphrase retrieval) or if we want to use embeddings as features (e.g., classification, clustering), we just use the <code>query:</code> prefix.</p>
 <p>The <a href="https://arxiv.org/abs/2212.09741">Instructor</a> model takes it a step further, allowing users to customize the prepended prompt: “Represent the <code>domain</code> <code>task_type</code> for the <code>task_objective</code>:” For example, “Represent the Wikipedia document for retrieval:”. (The domain and task objective are optional). This brings the concept of prompt tuning into the field of text embedding.</p>
 <p>Check more embedding models in this <a href="https://huggingface.co/spaces/mteb/leaderboard">Huggingface leaderboard</a></p>
-<aside>
-<p>💡 It’s important to keep in mind that the lower the dimensionality of the underlying vectors, the more compact the representation is in embedding space, which can affect downstream task quality. Sentence Transformers (sbert) provides embedding models with a dimension <em>n</em> in the range of 384, 512 and 768, and the models are completely free and open-source. OpenAI and Cohere embeddings, which require a paid API call to generate them, can be considered higher quality due to a dimensionality of a few thousand. One reason it makes sense to use a paid API to generate embeddings is if your data is multilingual.</p>
-</aside>
+<blockquote class="blockquote">
+<p>It’s important to keep in mind that the lower the dimensionality of the underlying vectors, the more compact the representation is in embedding space, which can affect downstream task quality. Sentence Transformers (sbert) provides embedding models with a dimension <em>n</em> in the range of 384, 512 and 768, and the models are completely free and open-source. OpenAI and Cohere embeddings, which require a paid API call to generate them, can be considered higher quality due to a dimensionality of a few thousand. One reason it makes sense to use a paid API to generate embeddings is if your data is multilingual.</p>
+</blockquote>
 </section>
 </section>
 <section id="approximate-nearest-neighbors-ann" class="level2">
@@ -397,15 +397,10 @@ ul.task-list li input[type="checkbox"] {
 <tbody>
 <tr class="odd">
 <td>Pros</td>
-<td>Way easier to setup. Frameworks like llama_index or langchain</td>
-<td></td>
+<td>Way easier to setup. Frameworks like llama_index or langchain give you the ability to define RAG systems/agents quickly. Prototype your idea quickly without getting lost in the component details. Also you don’t need labels for individual components, which can be tedious. Simply run LLM-evals on text inputs/outputs.</td>
+<td>More easily pin-point each component step by step. For instance, you can first validate that your retrieval is good before composing it into a RAG system. That way you have confidence that parts on their own are working properly.</td>
 </tr>
 <tr class="even">
-<td>give you the ability to define RAG systems/agents quickly. Prototype your idea quickly without getting lost in the component details. Also you don’t need labels for individual components, which can be tedious. Simply run LLM-evals on text inputs/outputs.</td>
-<td>More easily pin-point each component step by step. For instance, you can first validate that your retrieval is good before composing it into a RAG system. That way you have confidence that parts on their own are working properly.</td>
-<td></td>
-</tr>
-<tr class="odd">
 <td>Cons</td>
 <td>Hard to pinpoint the source of failures (is it retrieval? Is it LLM hallucination?). If there are failures, you will have to break your existing abstractions to then isolate and test each component anyways. Exponential number of combinations to try for performance improvement.</td>
 <td>Can be tedious to get started, since we first have to validate each component before building any system. Getting labeled outputs for every component or every subset of components can be time-consuming or in the worst case impossible.</td>
@@ -464,7 +459,7 @@ Recall_{\text{BERT}} = \frac{1}{|r|} \sum_{i \in r} \max_{j \in p} \vec{i}^T \ve
 <section id="end-to-end-evaluation" class="level2">
 <h2 class="anchored" data-anchor-id="end-to-end-evaluation">End-to-end evaluation</h2>
 <p>When coming to end-to-end evaluation, you can consider Ragas. <a href="https://github.com/explodinggradients/ragas">Ragas</a> is an open-source evaluation framework for RAG pipeline</p>
-<p>💡 Ragas measures your pipeline’s performance against different dimensions</p>
+<p>Ragas measures your pipeline’s performance against different dimensions</p>
 <ol type="1">
 <li><strong>Faithfulness</strong>: measures the information consistency of the generated answer against the given context. If any claims are made in the answer that cannot be deduced from context is penalized. It is calculated from&nbsp;<code>answer</code>&nbsp;and&nbsp;<code>retrieved context</code>.</li>
 <li><strong>Context Precision</strong>: measures how relevant retrieved contexts are to the question. Ideally, the context should only contain information necessary to answer the question. The presence of redundant information in the context is penalized. It is calculated from&nbsp;<code>question</code>&nbsp;and&nbsp;<code>retrieved context</code>.</li>
