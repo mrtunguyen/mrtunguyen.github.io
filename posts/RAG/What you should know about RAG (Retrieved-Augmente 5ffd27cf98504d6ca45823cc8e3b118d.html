@@ -1,0 +1,763 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2023-11-03">
+<meta name="description" content="Retrieval augmented generation (RAG)">
+
+<title>Machine learning Blog - What you should know about RAG (Retrieved-Augmented Generation)</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">Machine learning Blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html" rel="" target="">
+ <span class="menu-text">About me</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/mrtunguyen" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/jonathan_ttu" rel="" target=""><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">What you should know about RAG (Retrieved-Augmented Generation)</h1>
+                  <div>
+        <div class="description">
+          Retrieval augmented generation (RAG)
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">LLM</div>
+                <div class="quarto-category">RAG</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">November 3, 2023</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#how-rag-typically-works" id="toc-how-rag-typically-works" class="nav-link active" data-scroll-target="#how-rag-typically-works">How RAG typically works?</a></li>
+  <li><a href="#challenges" id="toc-challenges" class="nav-link" data-scroll-target="#challenges">Challenges</a>
+  <ul class="collapse">
+  <li><a href="#hallucinations" id="toc-hallucinations" class="nav-link" data-scroll-target="#hallucinations">Hallucinations</a></li>
+  <li><a href="#hard-to-evaluate" id="toc-hard-to-evaluate" class="nav-link" data-scroll-target="#hard-to-evaluate">Hard to evaluate</a></li>
+  <li><a href="#put-into-production" id="toc-put-into-production" class="nav-link" data-scroll-target="#put-into-production">Put into production</a></li>
+  </ul></li>
+  <li><a href="#retrieval-component" id="toc-retrieval-component" class="nav-link" data-scroll-target="#retrieval-component">Retrieval Component</a>
+  <ul class="collapse">
+  <li><a href="#how-are-embeddings-generated" id="toc-how-are-embeddings-generated" class="nav-link" data-scroll-target="#how-are-embeddings-generated">****How are embeddings generated?****</a>
+  <ul class="collapse">
+  <li><a href="#openai-embeddings" id="toc-openai-embeddings" class="nav-link" data-scroll-target="#openai-embeddings"><strong>OpenAI embeddings</strong></a></li>
+  <li><a href="#sentence-transformers" id="toc-sentence-transformers" class="nav-link" data-scroll-target="#sentence-transformers"><strong>Sentence Transformers</strong></a></li>
+  <li><a href="#instructor-model-embedding" id="toc-instructor-model-embedding" class="nav-link" data-scroll-target="#instructor-model-embedding"><strong>Instructor Model Embedding</strong></a></li>
+  </ul></li>
+  <li><a href="#approximate-nearest-neighbors-ann" id="toc-approximate-nearest-neighbors-ann" class="nav-link" data-scroll-target="#approximate-nearest-neighbors-ann">A<strong>pproximate nearest neighbors (ANN)</strong></a></li>
+  <li><a href="#indexing-technique" id="toc-indexing-technique" class="nav-link" data-scroll-target="#indexing-technique">Indexing Technique</a>
+  <ul class="collapse">
+  <li><a href="#ivf-pq" id="toc-ivf-pq" class="nav-link" data-scroll-target="#ivf-pq"><strong>IVF-PQ</strong></a></li>
+  <li><a href="#hierarchical-navigable-small-words" id="toc-hierarchical-navigable-small-words" class="nav-link" data-scroll-target="#hierarchical-navigable-small-words">Hierarchical Navigable Small Words</a></li>
+  <li><a href="#vamana" id="toc-vamana" class="nav-link" data-scroll-target="#vamana">****Vamana****</a></li>
+  </ul></li>
+  <li><a href="#retrieval-approaches" id="toc-retrieval-approaches" class="nav-link" data-scroll-target="#retrieval-approaches">Retrieval Approaches</a></li>
+  </ul></li>
+  <li><a href="#rags-evaluation" id="toc-rags-evaluation" class="nav-link" data-scroll-target="#rags-evaluation">RAG’s evaluation</a>
+  <ul class="collapse">
+  <li><a href="#component-wise-evaluation" id="toc-component-wise-evaluation" class="nav-link" data-scroll-target="#component-wise-evaluation">Component-wise Evaluation</a>
+  <ul class="collapse">
+  <li><a href="#embedding" id="toc-embedding" class="nav-link" data-scroll-target="#embedding">Embedding</a></li>
+  <li><a href="#retrieval" id="toc-retrieval" class="nav-link" data-scroll-target="#retrieval">Retrieval</a></li>
+  </ul></li>
+  <li><a href="#end-to-end-evaluation" id="toc-end-to-end-evaluation" class="nav-link" data-scroll-target="#end-to-end-evaluation">End-to-end evaluation</a></li>
+  </ul></li>
+  <li><a href="#ways-to-improve-rags-performance" id="toc-ways-to-improve-rags-performance" class="nav-link" data-scroll-target="#ways-to-improve-rags-performance">Ways to improve RAG’s performance?</a>
+  <ul class="collapse">
+  <li><a href="#data-source-and-parameters-tuning" id="toc-data-source-and-parameters-tuning" class="nav-link" data-scroll-target="#data-source-and-parameters-tuning">Data source and parameters tuning</a>
+  <ul class="collapse">
+  <li><a href="#pay-attention-to-base-documents" id="toc-pay-attention-to-base-documents" class="nav-link" data-scroll-target="#pay-attention-to-base-documents">Pay attention to base documents</a></li>
+  <li><a href="#tune-different-indexing-chunking-approaches" id="toc-tune-different-indexing-chunking-approaches" class="nav-link" data-scroll-target="#tune-different-indexing-chunking-approaches">Tune different indexing / chunking approaches</a></li>
+  <li><a href="#adding-meta-data-for-filtering" id="toc-adding-meta-data-for-filtering" class="nav-link" data-scroll-target="#adding-meta-data-for-filtering">Adding meta-data for filtering</a></li>
+  <li><a href="#iterate-over-your-prompt" id="toc-iterate-over-your-prompt" class="nav-link" data-scroll-target="#iterate-over-your-prompt">Iterate over your prompt</a></li>
+  <li><a href="#fine-tune-your-embedding-model." id="toc-fine-tune-your-embedding-model." class="nav-link" data-scroll-target="#fine-tune-your-embedding-model."><strong>Fine-tune your embedding model.</strong></a></li>
+  </ul></li>
+  <li><a href="#retrieval-logic" id="toc-retrieval-logic" class="nav-link" data-scroll-target="#retrieval-logic">Retrieval Logic</a>
+  <ul class="collapse">
+  <li><a href="#decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" id="toc-decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" class="nav-link" data-scroll-target="#decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis">****Decoupling Chunks Used for Retrieval vs.&nbsp;Chunks Used for Synthesis****</a></li>
+  <li><a href="#structured-retrieval-for-larger-document-sets" id="toc-structured-retrieval-for-larger-document-sets" class="nav-link" data-scroll-target="#structured-retrieval-for-larger-document-sets">****Structured Retrieval for Larger Document Sets****</a></li>
+  </ul></li>
+  <li><a href="#caching" id="toc-caching" class="nav-link" data-scroll-target="#caching">Caching</a>
+  <ul class="collapse">
+  <li><a href="#semantic-cache-results" id="toc-semantic-cache-results" class="nav-link" data-scroll-target="#semantic-cache-results">Semantic cache results</a></li>
+  </ul></li>
+  </ul></li>
+  <li><a href="#reference" id="toc-reference" class="nav-link" data-scroll-target="#reference">Reference</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
+
+
+
+
+<p>Large language models (LLMs) have unquestionably revolutionized the way we engage with information. Nevertheless, they are not without their limitations, particularly regarding the scope of queries they can effectively handle. Base LLMs (e.g., Llama-2, gpt-series, etc.) are limited to the knowledge contained within their training data, making them less adept at responding to inquiries that demand knowledge beyond their training set.</p>
+<p>Retrieval augmented generation (RAG)-based LLM applications directly tackle this challenge, enabling LLMs to tap into our domain-specific data sources and significantly expand their capacity to provide relevant information.</p>
+<p>[Untitled](What%20you%20should%20know%20about%20RAG%20(Retrieved-Augmente%205ffd27cf98504d6ca45823cc8e3b118d/Untitled.png)</p>
+<ol type="1">
+<li><strong>Access to External Knowledge</strong>: Large language models (LLMs) like GPT-3 or GPT-4 have limitations in terms of the knowledge they possess. They are primarily trained on large text corpora but may not have access to specific or up-to-date information from external sources. RAG allows these models to tap into external knowledge bases, databases, documents, or the web to retrieve relevant and accurate information.</li>
+<li><strong>Domain-Specific Expertise</strong>: In many applications, users require domain-specific expertise or information that goes beyond the general knowledge contained in LLMs. RAG enables LLMs to access domain-specific databases or documents, providing specialized answers to queries.</li>
+<li><strong>Enhanced Accuracy</strong>: Retrieval can significantly improve the accuracy of responses. By retrieving information from reliable sources, RAG models can validate the information they generate, reducing the risk of producing incorrect or misleading answers.</li>
+<li><strong>Data Freshness</strong>: Information retrieved from external sources can be more up-to-date and reflect real-time changes. This is crucial in fields where information quickly becomes obsolete, such as news, finance, or healthcare.</li>
+</ol>
+<section id="how-rag-typically-works" class="level3">
+<h3 class="anchored" data-anchor-id="how-rag-typically-works">How RAG typically works?</h3>
+<ol type="1">
+<li><strong>Retrieval Component</strong>: In the retrieval phase, an external search mechanism is employed to retrieve relevant information or documents from a predefined knowledge base or data source. This can include web pages, databases, documents, or any other structured or unstructured data.</li>
+<li><strong>Generation Component</strong>: After retrieving relevant information, the generation component, often powered by an LLM like GPT-3 or GPT-4, takes over. It generates human-readable and contextually relevant responses, using the retrieved information as a source of knowledge.</li>
+</ol>
+</section>
+<section id="challenges" class="level1">
+<h1>Challenges</h1>
+<section id="hallucinations" class="level3">
+<h3 class="anchored" data-anchor-id="hallucinations">Hallucinations</h3>
+<p>While RAG was born to reduce hallucination of a LLM by providing an intervene</p>
+</section>
+<section id="hard-to-evaluate" class="level3">
+<h3 class="anchored" data-anchor-id="hard-to-evaluate">Hard to evaluate</h3>
+<p>Measuring the relevance between paragraphs, especially in question answering or information retrieval, can be a complex task. The relevance assessment is crucial to determine whether a given section contains information directly related to a specific question.</p>
+</section>
+<section id="put-into-production" class="level3">
+<h3 class="anchored" data-anchor-id="put-into-production">Put into production</h3>
+<p>Prototyping a RAG application is easy, but making it performant, robust, and scalable to a large knowledge corpus is hard. While we can easily find many tutorials online with only 10 lines of code telling how easy it is to do a RAG over your own documents, the big challenge still sits there with big number of documents to ingest in production, many queries at the same time with a large number of users etc.</p>
+</section>
+</section>
+<section id="retrieval-component" class="level1 page-columns page-full">
+<h1>Retrieval Component</h1>
+<p><strong>Hybrid retrieval</strong>, which encompasses both traditional search indexing and embedding-based search, usually yields superior results compared to using either method in isolation. For example, we can complement classical retrieval (BM25 via OpenSearch) with semantic search (<code>e5-small-v2</code>).</p>
+<p>[Untitled](What%20you%20should%20know%20about%20RAG%20(Retrieved-Augmente%205ffd27cf98504d6ca45823cc8e3b118d/Untitled%201.png)</p>
+<p><strong>Why not rely solely on embedding-based search?</strong></p>
+<p>While embedding-based search excels in many scenarios, it has limitations that become apparent in specific situations, including:</p>
+<ul>
+<li>The search for personal names or object identifiers (e.g., Jonathan)</li>
+<li>The search for acronyms or specialized phrases (e.g., RAG, RLHF)</li>
+<li>The search for unique identifiers (e.g., <strong><code>gpt-3.5-turbo</code></strong>)</li>
+</ul>
+<p><strong>Why not keyword-based search only?</strong></p>
+<p>However, it’s important to note that keyword-based search also has its constraints. It primarily models basic word frequencies and lacks the ability to capture semantic nuances or correlations. Consequently, it struggles with synonyms and hypernyms (words that represent generalizations). This is where the synergy of combining keyword search with semantic search proves advantageous.</p>
+<section id="how-are-embeddings-generated" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="how-are-embeddings-generated">****How are embeddings generated?****</h2>
+<section id="openai-embeddings" class="level3">
+<h3 class="anchored" data-anchor-id="openai-embeddings"><strong>OpenAI embeddings</strong></h3>
+<p><strong>With regard to embeddings</strong>, the seemingly popular approach is to use <code>[text-embedding-ada-002](https://openai.com/blog/new-and-improved-embedding-model)</code>. Its benefits include ease of use via an API and not having to maintain our own embedding infra or self-host embedding models. Nonetheless, personal experience and anecdotes from others suggest there are better alternatives for retrieval.</p>
+<p>The OG embedding approaches include Word2vec and <a href="https://fasttext.cc/">fastText</a>. FastText is an open-source, lightweight library that enables users to leverage pre-trained embeddings or train new embedding models. It comes with pre-trained embeddings for 157 languages and is extremely fast, even without a GPU. It’s my go-to for early-stage proof of concepts.</p>
+</section>
+<section id="sentence-transformers" class="level3">
+<h3 class="anchored" data-anchor-id="sentence-transformers"><a href="https://github.com/UKPLab/sentence-transformers"><strong>Sentence Transformers</strong></a></h3>
+<p>It makes it simple to compute embeddings for sentences, paragraphs, and even images. It’s based on workhorse transformers such as BERT and RoBERTa and is available in more than 100 languages.</p>
+</section>
+<section id="instructor-model-embedding" class="level3 page-columns page-full">
+<h3 class="anchored" data-anchor-id="instructor-model-embedding"><strong>Instructor Model Embedding</strong></h3>
+<p>More recently, instructor models have shown SOTA performance. During training, these models prepend the task description to the text. Then, when embedding new text, we simply have to describe the task to get task-specific embeddings. (Not that different from instruction tuning for embedding models IMHO.)</p>
+<p>An example is the <a href="https://arxiv.org/abs/2212.03533">E5</a> family of models. For open QA and information retrieval, we simply prepend documents in the index with <code>passage:</code>, and prepend queries with <code>query:</code>. If the task is symmetric (e.g., semantic similarity, paraphrase retrieval) or if we want to use embeddings as features (e.g., classification, clustering), we just use the <code>query:</code> prefix.</p>
+<p>The <a href="https://arxiv.org/abs/2212.09741">Instructor</a> model takes it a step further, allowing users to customize the prepended prompt: “Represent the <code>domain</code> <code>task_type</code> for the <code>task_objective</code>:” For example, “Represent the Wikipedia document for retrieval:”. (The domain and task objective are optional). This brings the concept of prompt tuning into the field of text embedding.</p>
+<p>Check more embedding models in this <a href="https://huggingface.co/spaces/mteb/leaderboard">Huggingface leaderboard</a></p>
+<aside>
+<p>💡 It’s important to keep in mind that the lower the dimensionality of the underlying vectors, the more compact the representation is in embedding space, which can affect downstream task quality. Sentence Transformers (sbert) provides embedding models with a dimension <em>n</em> in the range of 384, 512 and 768, and the models are completely free and open-source. OpenAI and Cohere embeddings, which require a paid API call to generate them, can be considered higher quality due to a dimensionality of a few thousand. One reason it makes sense to use a paid API to generate embeddings is if your data is multilingual.</p>
+</aside>
+</section>
+</section>
+<section id="approximate-nearest-neighbors-ann" class="level2">
+<h2 class="anchored" data-anchor-id="approximate-nearest-neighbors-ann">A<strong>pproximate nearest neighbors (ANN)</strong></h2>
+<p>After generating and storing the embedding vectors, the objective of similarity search is to retrieve the top-k most similar vectors to the vector associated with a user’s search query.</p>
+<p>The simplest approach to accomplish this task involves comparing the query vector to each vector in the database, employing the k-nearest neighbor (kNN) method. However, this approach rapidly becomes prohibitively costly as we expand to encompass millions or even billions of data points. This is due to the fact that the number of necessary comparisons increases linearly with the volume of data, making it inefficient at scale. That’s why <strong>approximate nearest neighbors (ANN)</strong> comes in as a rescue. It optimizes for retrieval speed and returns the approximate (instead of exact) topmost similar neighbors, trading off a little accuracy loss for a large speed up.</p>
+</section>
+<section id="indexing-technique" class="level2">
+<h2 class="anchored" data-anchor-id="indexing-technique">Indexing Technique</h2>
+<p>The similarity between two vectors is measured using distance metrics such as cosine distance or dot product. When dealing with vector databases, it is crucial to differentiate between the search algorithm and the underlying <strong>index</strong> on which the Approximate Nearest Neighbor (ANN) search algorithm is executed.</p>
+<p><strong>What is the index?</strong></p>
+<p>Data within a vector database is organized through <strong>indexing</strong>, a process that involves constructing data structures known as indexes. These indexes facilitate efficient vector retrieval by swiftly reducing the search scope.</p>
+<p>This <a href="https://thedataquarry.com/posts/vector-db-3">great blog about indexes from thedataquarry</a> gives a best overview on this subject.</p>
+<section id="ivf-pq" class="level3">
+<h3 class="anchored" data-anchor-id="ivf-pq"><strong>IVF-PQ</strong></h3>
+<p>In a simple terms, the IVF part of the index helps us find the right area to search in, like narrowing down which part of a library to look in for a specific book. The PQ part helps us quickly compare the query (what we’re looking for) with the actual books (database vectors), making the search faster. It’s like having a shortcut to check if a book matches what we want.</p>
+<p>When we use both IVF and PQ together, we get a big boost in speed because PQ helps with speed, and IVF helps us find more of the right books, improving the chances of finding what we’re looking for.</p>
+</section>
+<section id="hierarchical-navigable-small-words" class="level3">
+<h3 class="anchored" data-anchor-id="hierarchical-navigable-small-words">Hierarchical Navigable Small Words</h3>
+<p>The Hierarchical Navigable Small-World (HNSW) graph algorithm is widely regarded as one of the most popular methods for constructing vector indexes. In fact, many database vendors currently favor it as their primary choice.</p>
+</section>
+<section id="vamana" class="level3">
+<h3 class="anchored" data-anchor-id="vamana">****Vamana****</h3>
+</section>
+</section>
+<section id="retrieval-approaches" class="level2">
+<h2 class="anchored" data-anchor-id="retrieval-approaches">Retrieval Approaches</h2>
+<p>Various approaches to the retrieval mechanism have been proposed to get requisite context as well as overcome the challenges involved. They range from simple approaches to sophisticated multi step processes, some of them involving the LLM itself in pre-processing steps.</p>
+<p>Some of the approaches are:</p>
+<p><strong><em>Simple</em></strong></p>
+<ul>
+<li>Fetch relevant documents (top k) based on the query or input.</li>
+<li>Consider all retrieved documents as part of the context for generating the response.</li>
+<li>All documents are treated equally and incorporated into the generation process.</li>
+</ul>
+<p><strong><em>Map Reduce:</em></strong></p>
+<ul>
+<li>Fetch relevant documents based on the query or input.</li>
+<li>Retrieve responses from the model for each document.</li>
+<li>Combine the individual responses generated for each document to produce the final response via LLM.</li>
+</ul>
+<p><strong><em>Map Refine:</em></strong></p>
+<ul>
+<li>Fetch relevant documents based on the query or input.</li>
+<li>Retrieve the response from the first document.</li>
+<li>Use this initial response and subsequent documents to refine the response iteratively.</li>
+<li>Repeat this refinement process until a final answer or response is obtained.</li>
+</ul>
+<p><strong><em>Map Rerank:</em></strong></p>
+<ul>
+<li>Fetch relevant documents based on the query or input.</li>
+<li>Retrieve responses for all documents individually</li>
+<li>Apply a ranking model or algorithm to rank the responses.</li>
+<li>Select the best-ranked response as the final answer or response.</li>
+</ul>
+<p><strong><em>Filtering:</em></strong></p>
+<ul>
+<li>Query for relevant documents based on the query or input.</li>
+<li>Apply a model to further filter the document set.</li>
+<li>Use the filtered documents as the context for generating the response.</li>
+</ul>
+<p><strong><em>Contextual Compression:</em></strong></p>
+<ul>
+<li>Query for relevant documents based on the query or input.</li>
+<li>Apply a model to filter the documents based on relevancy and extract only relevant snippets from each document.</li>
+<li>Utilize these relevant snippets to generate a concise and informative response.</li>
+</ul>
+<p><strong><em>Summary Based Index:</em></strong></p>
+<ul>
+<li>Relevant for a document repository with document summaries.</li>
+<li>Large documents can be broken down into smaller manageable snippets..</li>
+<li>A summary of the entire document too is created.</li>
+<li>Snippets are linked to the summary.</li>
+<li>Index document snippets along with document summaries.</li>
+<li>Query for relevant document summaries.</li>
+<li>Collect the snippets from the relevant summaries to form the document set.</li>
+<li>Use the document set to generate a response.</li>
+</ul>
+<p><strong><em>Forward-Looking Active REtrieval augmented generation (FLARE):</em></strong></p>
+<ul>
+<li>Look up an initial set of relevant documents.</li>
+<li>Use this initial set and query to predict the upcoming sentence.</li>
+<li>Check for the confidence level of the predicted tokens.</li>
+<li>If the confidence level is high then continue predicting the next sentence.</li>
+<li>Else use the predicted sentence as a query to look up more relevant documents.</li>
+<li>Iteratively continue the process to generate the full response.</li>
+</ul>
+</section>
+</section>
+<section id="rags-evaluation" class="level1 page-columns page-full">
+<h1>RAG’s evaluation</h1>
+<p>Evaluating RAG is very important but it’s tricky because this involves so many moving parts.</p>
+<p>There’s two general strategies for evaluating your LLM app:</p>
+<ul>
+<li>End-to-end : Just evaluate on the quality of your text outputs</li>
+<li>Component-wise : Evaluate each component first (retrieval, single LLM call), and then gradually stitch them together into an overall system.</li>
+</ul>
+<table class="table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th></th>
+<th>End-to-end</th>
+<th>Component-wise</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Pros</td>
+<td>Way easier to setup. Frameworks like llama_index or langchain</td>
+<td></td>
+</tr>
+<tr class="even">
+<td>give you the ability to define RAG systems/agents quickly. Prototype your idea quickly without getting lost in the component details. Also you don’t need labels for individual components, which can be tedious. Simply run LLM-evals on text inputs/outputs.</td>
+<td>More easily pin-point each component step by step. For instance, you can first validate that your retrieval is good before composing it into a RAG system. That way you have confidence that parts on their own are working properly.</td>
+<td></td>
+</tr>
+<tr class="odd">
+<td>Cons</td>
+<td>Hard to pinpoint the source of failures (is it retrieval? Is it LLM hallucination?). If there are failures, you will have to break your existing abstractions to then isolate and test each component anyways. Exponential number of combinations to try for performance improvement.</td>
+<td>Can be tedious to get started, since we first have to validate each component before building any system. Getting labeled outputs for every component or every subset of components can be time-consuming or in the worst case impossible.</td>
+</tr>
+</tbody>
+</table>
+<section id="component-wise-evaluation" class="level2">
+<h2 class="anchored" data-anchor-id="component-wise-evaluation">Component-wise Evaluation</h2>
+<section id="embedding" class="level3">
+<h3 class="anchored" data-anchor-id="embedding">Embedding</h3>
+<p>The first component that you want to evaluate is the embedding model. It helps to look at how well the model is performing on a diverse set of domains or tasks. A useful benchmark for embeddings is the&nbsp;<a href="https://huggingface.co/spaces/mteb/leaderboard">MTEB Leaderboard</a>.</p>
+</section>
+<section id="retrieval" class="level3">
+<h3 class="anchored" data-anchor-id="retrieval">Retrieval</h3>
+<p>One of the most important question is how we can measure the score of similarity between our retrieval predictions and our ground truth answer.</p>
+<p><strong>Classical metrics</strong></p>
+<p>The commonly used metrics such as BLEU, ROUGE, BERTScore, and MoverScore.</p>
+<p><strong><a href="https://dl.acm.org/doi/10.3115/1073083.1073135">BLEU</a>&nbsp;(Bilingual Evaluation Understudy)</strong>&nbsp;is a precision-based metric: It counts the number of n-grams in the generated output that also show up in the reference, and then divides it by the total number of words in the output. It’s predominantly used in machine translation and remains a popular metric due to its cost-effectiveness.</p>
+<p><span class="math display">\[
+\text{precision}_n = \frac{\sum_{p \in \text{output}} \sum_{\text{n-gram} \in p} \text{Count}_{\text{clip}} (\text{n-gram})}{\sum_{p \in \text{output}} \sum_{\text{n-gram} \in p} \text{Count}(\text{n-gram})}
+\]</span></p>
+<p><strong><a href="https://aclanthology.org/W04-1013/">ROUGE</a>&nbsp;(Recall-Oriented Understudy for Gisting Evaluation)</strong>: In contrast to BLEU, ROUGE is recall-oriented. It counts the number of words in the reference that also occur in the output. It’s typically used to assess automatic summarization tasks.</p>
+<p>There are several ROUGE variants. ROUGE-N is most similar to BLEU in that it also counts the number of matching n-grams between the output and the reference.</p>
+<p><span class="math display">\[
+\text{ROUGE-N} = \frac{\sum_{s_r \in \text{references}} \sum_{n\text{-gram} \in s_r} \text{Count}_{\text{match}} (n\text{-gram})}{\sum_{s_r \in \text{references}} \sum_{n\text{-gram} \in s_r} \text{Count} (n\text{-gram})}
+\]</span></p>
+<p>Other variants include:</p>
+<ul>
+<li>ROUGE-L: This measures the longest common subsequence (LCS) between the output and the reference. It considers sentence-level structure similarity and zeros in on the longest series of co-occurring in-sequence n-grams.</li>
+<li>ROUGE-S: This measures the skip-bigram between the output and reference. Skip-bigrams are pairs of words that maintain their sentence order regardless of the words that might be sandwiched between them.</li>
+</ul>
+<p><strong><a href="https://arxiv.org/abs/1904.09675">BERTScore</a></strong>&nbsp;is an embedding-based metric that uses cosine similarity to compare each token or n-gram in the generated output with the reference sentence. There are three components to BERTScore:</p>
+<ul>
+<li>Recall: Average cosine similarity between each token in the reference and its closest match in the generated output.</li>
+<li>Precision: Average cosine similarity between each token in the generated output and its nearest match in the reference.</li>
+<li>F1: Harmonic mean of recall and precision</li>
+</ul>
+<p><span class="math display">\[
+Recall_{\text{BERT}} = \frac{1}{|r|} \sum_{i \in r} \max_{j \in p} \vec{i}^T \vec{j}, \quad Precision_{\text{BERT}} = \frac{1}{|p|} \sum_{j \in p} \max_{i \in r} \vec{i}^T \vec{j}
+\]</span></p>
+<p><span class="math display">\[
+\text{BERTscore} = F_{\text{BERT}} = \frac{2 \cdot P_{\text{BERT}} \cdot R_{\text{BERT}}}{P_{\text{BERT}} + R_{\text{BERT}}}
+\]</span></p>
+<p>BERTScore is useful because it can account for synonyms and paraphrasing. Simpler metrics like BLEU and ROUGE can’t do this due to their reliance on exact matches. BERTScore has been shown to have better correlation for tasks such as image captioning and machine translation.</p>
+<p><strong><a href="https://arxiv.org/abs/1909.02622">MoverScore</a></strong>&nbsp;also uses contextualized embeddings to compute the distance between tokens in the generated output and reference. But unlike BERTScore, which is based on one-to-one matching (or “hard alignment”) of tokens, MoverScore allows for many-to-one matching (or “soft alignment”).</p>
+<p>[Untitled](What%20you%20should%20know%20about%20RAG%20(Retrieved-Augmente%205ffd27cf98504d6ca45823cc8e3b118d/Untitled%202.png)</p>
+<p><strong>Use a strong LLM as a reference-free metric</strong></p>
+<p>Ideally, we would have humans interpret if the output quality is good. Human raters, however, are extremely resource-intensive and not practical at scale. GPT-4 has been used as a fairly good proxy to human-raters. You may want to consider prompt engineering techniques such as&nbsp;<a href="https://www.promptingguide.ai/techniques/fewshot">few shot prompting</a>,&nbsp;<a href="https://www.promptingguide.ai/techniques/cot">chain-of-thought</a>, and&nbsp;<a href="https://www.promptingguide.ai/techniques/consistency">self-consistency</a>&nbsp;to generate more reliable evaluation results from GPT-4.</p>
+</section>
+</section>
+<section id="end-to-end-evaluation" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="end-to-end-evaluation">End-to-end evaluation</h2>
+<p>When coming to end-to-end evaluation, you can consider Ragas. <a href="https://github.com/explodinggradients/ragas">Ragas</a> is an open-source evaluation framework for RAG pipeline</p>
+<aside>
+<p>💡 Ragas measures your pipeline’s performance against different dimensions</p>
+<ol type="1">
+<li><strong>Faithfulness</strong>: measures the information consistency of the generated answer against the given context. If any claims are made in the answer that cannot be deduced from context is penalized. It is calculated from&nbsp;<code>answer</code>&nbsp;and&nbsp;<code>retrieved context</code>.</li>
+<li><strong>Context Precision</strong>: measures how relevant retrieved contexts are to the question. Ideally, the context should only contain information necessary to answer the question. The presence of redundant information in the context is penalized. It is calculated from&nbsp;<code>question</code>&nbsp;and&nbsp;<code>retrieved context</code>.</li>
+<li><strong>Context Recall</strong>: measures the recall of the retrieved context using annotated answer as ground truth. Annotated answer is taken as proxy for ground truth context. It is calculated from&nbsp;<code>ground truth</code>&nbsp;and&nbsp;<code>retrieved context</code>.</li>
+<li><strong>Answer Relevancy</strong>: refers to the degree to which a response directly addresses and is appropriate for a given question or context. This does not take the factuality of the answer into consideration but rather penalizes the present of redundant information or incomplete answers given a question. It is calculated from&nbsp;<code>question</code>&nbsp;and&nbsp;<code>answer</code>.</li>
+<li><strong>Aspect Critiques</strong>: Designed to judge the submission against defined aspects like harmlessness, correctness, etc. You can also define your own aspect and validate the submission against your desired aspect. The output of aspect critiques is always binary. It is calculated from&nbsp;<code>answer</code>.</li>
+</ol>
+</aside>
+</section>
+</section>
+<section id="ways-to-improve-rags-performance" class="level1">
+<h1>Ways to improve RAG’s performance?</h1>
+<section id="data-source-and-parameters-tuning" class="level2">
+<h2 class="anchored" data-anchor-id="data-source-and-parameters-tuning">Data source and parameters tuning</h2>
+<section id="pay-attention-to-base-documents" class="level3">
+<h3 class="anchored" data-anchor-id="pay-attention-to-base-documents">Pay attention to base documents</h3>
+</section>
+<section id="tune-different-indexing-chunking-approaches" class="level3">
+<h3 class="anchored" data-anchor-id="tune-different-indexing-chunking-approaches">Tune different indexing / chunking approaches</h3>
+</section>
+<section id="adding-meta-data-for-filtering" class="level3">
+<h3 class="anchored" data-anchor-id="adding-meta-data-for-filtering">Adding meta-data for filtering</h3>
+<p>A highly effective strategy for enhancing the retrieval process involves augmenting your data chunks with metadata, which can subsequently be leveraged to refine result processing. One commonly used metadata tag is the “date” because it facilitates filtering by recency.</p>
+</section>
+<section id="iterate-over-your-prompt" class="level3">
+<h3 class="anchored" data-anchor-id="iterate-over-your-prompt">Iterate over your prompt</h3>
+</section>
+<section id="fine-tune-your-embedding-model." class="level3">
+<h3 class="anchored" data-anchor-id="fine-tune-your-embedding-model."><strong>Fine-tune your embedding model.</strong></h3>
+<p>Finetuning a model means updating the model itself over a set of data to improve the model in a variety of ways. This can include improving the quality of outputs, reducing hallucinations, memorizing more data holistically, and reducing latency/cost. Finetuning the embedding model can allow for more meaningful embedding representations over a training distribution of data –&gt; leads to better retrieval performance.</p>
+</section>
+</section>
+<section id="retrieval-logic" class="level2">
+<h2 class="anchored" data-anchor-id="retrieval-logic">Retrieval Logic</h2>
+<section id="decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" class="level3">
+<h3 class="anchored" data-anchor-id="decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis">****Decoupling Chunks Used for Retrieval vs.&nbsp;Chunks Used for Synthesis****</h3>
+<p>The most effective way to represent information for retrieval could differ from the most effective approach for synthesis. For example, a raw text chunk may provide essential details that help the language model generate a comprehensive response to a query. However, it might also contain extraneous filler words or information that could skew the embedding representation. Additionally, it may lack sufficient global context and might not be retrieved when a relevant query is received. In that sense, we can embed a document summary, which links to chunks associated with the document or embed a sentence which links to a window around the sentence.</p>
+</section>
+<section id="structured-retrieval-for-larger-document-sets" class="level3">
+<h3 class="anchored" data-anchor-id="structured-retrieval-for-larger-document-sets">****Structured Retrieval for Larger Document Sets****</h3>
+<p>A significant drawback of the standard RAG stack, which involves top-k retrieval and basic text splitting, becomes evident when dealing with a large number of documents, such as 100 different PDFs. In this scenario, when you have a query, it’s often essential to utilize structured information to enhance precision in retrieval. For instance, if your question pertains to only two specific PDFs, relying solely on raw embedding similarity with text chunks may not be sufficient.</p>
+<p>One effective approach to address this issue is to embed document summaries and establish a mapping to text chunks within each document. This enables retrieval at the document level initially, prioritizing the identification of relevant documents before delving into chunk-level analysis.</p>
+</section>
+</section>
+<section id="caching" class="level2">
+<h2 class="anchored" data-anchor-id="caching">Caching</h2>
+<section id="semantic-cache-results" class="level3">
+<h3 class="anchored" data-anchor-id="semantic-cache-results">Semantic cache results</h3>
+<p>Traditional caching systems use various techniques to store data or queries so that when another user asks the same or similar query, you don’t have to make a full round trip to generate the same context. However, traditional caching systems use an exact keyword match, which doesn’t work with LLMs where the queries are in natural language. So, how do you ensure you’re not performing a full retrieval each time when the queries are similar?</p>
+<p>This is where&nbsp;<a href="https://github.com/zilliztech/GPTCache">CacheGPT</a>&nbsp;comes in. CacheGPT uses semantic search to match queries against previously asked queries, and if there’s a match, you simply return the last context instead of performing a full retrieval. CacheGPT is an open-source library, and you can refer to its&nbsp;<a href="https://gptcache.readthedocs.io/en/latest/usage.html">documentation</a>&nbsp;to configure it to your requirements.</p>
+</section>
+</section>
+</section>
+<section id="reference" class="level1">
+<h1>Reference</h1>
+<ol type="1">
+<li>**<a href="https://www.notion.so/Retrieval-Augmented-Generation-RAG-453d3fd10527440a97285f52083623fb?pvs=21">ACL 2023 Tutorial**</a></li>
+<li><a href="https://huggingface.co/spaces/mteb/leaderboard">Massive Text Embedding Benchmark (MTEB) leaderboard.</a><br>
+</li>
+<li>[RAG is more than just embedding search](What%20you%20should%20know%20about%20RAG%20(Retrieved-Augmente%205ffd27cf98504d6ca45823cc8e3b118d.md)</li>
+<li><a href="https://github.com/erikbern/ann-benchmarks">Benchmarks of approximate nearest neighbor libraries in Python</a></li>
+<li><a href="https://towardsdatascience.com/10-ways-to-improve-the-performance-of-retrieval-augmented-generation-systems-5fa2cee7cd5c">10 Ways to Improve the Performance of Retrieval Augmented Generation Systems</a></li>
+<li><a href="https://thedataquarry.com/posts/vector-db-3/">Not all indexes are created equal</a></li>
+<li><a href="https://github.com/explodinggradients/ragas">RAGAS: Evaluation framework for your Retrieval Augmented Generation (RAG) pipelines</a></li>
+<li><a href="https://eugeneyan.com/writing/llm-patterns/">Patterns for Building LLM-based Systems &amp; Products</a></li>
+<li><a href="https://docs.llamaindex.ai/en/stable/optimizing/production_rag.html">Building Performant RAG Applications for Production</a></li>
+</ol>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>
