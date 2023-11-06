@@ -214,7 +214,7 @@ ul.task-list li input[type="checkbox"] {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/Untitled.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Untitled</figcaption>
+<figcaption class="figure-caption">Simple diagram of how RAG works</figcaption>
 </figure>
 </div>
 <ol type="1">
@@ -251,7 +251,7 @@ ul.task-list li input[type="checkbox"] {
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="images/Untitled 1.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Untitled</figcaption>
+<figcaption class="figure-caption">keyword search, vector search and hybrid search</figcaption>
 </figure>
 </div>
 <p><strong>Why not rely solely on embedding-based search?</strong></p>
@@ -475,6 +475,7 @@ Recall_{\text{BERT}} = \frac{1}{|r|} \sum_{i \in r} \max_{j \in p} \vec{i}^T \ve
 <h2 class="anchored" data-anchor-id="data-source-and-parameters-tuning">Data source and parameters tuning</h2>
 <section id="pay-attention-to-base-documents" class="level3">
 <h3 class="anchored" data-anchor-id="pay-attention-to-base-documents">Pay attention to base documents</h3>
+<p>The most important part of RAG is data source which creates a base knowledge for the LLM to generate the answer. The quality of the base documents will directly affect the quality of the answer. To improve the quality of answer, we should do some sorts preprocessing / cleaning / filtering to the base documents.</p>
 </section>
 <section id="tune-different-indexing-chunking-approaches" class="level3">
 <h3 class="anchored" data-anchor-id="tune-different-indexing-chunking-approaches">Tune different indexing / chunking approaches</h3>
