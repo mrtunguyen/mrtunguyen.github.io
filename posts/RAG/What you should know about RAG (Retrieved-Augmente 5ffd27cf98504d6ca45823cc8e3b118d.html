@@ -185,7 +185,6 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#pay-attention-to-base-documents" id="toc-pay-attention-to-base-documents" class="nav-link" data-scroll-target="#pay-attention-to-base-documents">Pay attention to base documents</a></li>
   <li><a href="#tune-different-indexing-chunking-approaches" id="toc-tune-different-indexing-chunking-approaches" class="nav-link" data-scroll-target="#tune-different-indexing-chunking-approaches">Tune different indexing / chunking approaches</a></li>
-  <li><a href="#adding-meta-data-for-filtering" id="toc-adding-meta-data-for-filtering" class="nav-link" data-scroll-target="#adding-meta-data-for-filtering">Adding meta-data for filtering</a></li>
   <li><a href="#iterate-over-your-prompt" id="toc-iterate-over-your-prompt" class="nav-link" data-scroll-target="#iterate-over-your-prompt">Iterate over your prompt</a></li>
   <li><a href="#fine-tune-your-embedding-model." id="toc-fine-tune-your-embedding-model." class="nav-link" data-scroll-target="#fine-tune-your-embedding-model.">Fine-tune your embedding model.</a></li>
   </ul></li>
@@ -234,7 +233,7 @@ ul.task-list li input[type="checkbox"] {
 <h1>Challenges</h1>
 <section id="hallucinations" class="level3">
 <h3 class="anchored" data-anchor-id="hallucinations">Hallucinations</h3>
-<p>While RAG was born to reduce hallucination of a LLM by providing an intervene</p>
+<p>While RAG was born to reduce hallucination of a LLM by providing an external knowledge source, it can also introduce new hallucinations. For example, if the retrieval component returns a document that is not relevant to the query, the LLM may generate an answer that is not relevant to the query.</p>
 </section>
 <section id="hard-to-evaluate" class="level3">
 <h3 class="anchored" data-anchor-id="hard-to-evaluate">Hard to evaluate</h3>
@@ -295,7 +294,7 @@ ul.task-list li input[type="checkbox"] {
 <p>The similarity between two vectors is measured using distance metrics such as cosine distance or dot product. When dealing with vector databases, it is crucial to differentiate between the search algorithm and the underlying <strong>index</strong> on which the Approximate Nearest Neighbor (ANN) search algorithm is executed.</p>
 <p><strong>What is the index?</strong></p>
 <p>Data within a vector database is organized through <strong>indexing</strong>, a process that involves constructing data structures known as indexes. These indexes facilitate efficient vector retrieval by swiftly reducing the search scope.</p>
-<p>This <a href="https://thedataquarry.com/posts/vector-db-3">great blog about indexes from thedataquarry</a> gives a best overview on this subject.</p>
+<p>This <a href="https://thedataquarry.com/posts/vector-db-3">great blog about indexes from thedataquarry</a> gives a best overview on this subject. In our blog, we will talk about the most popular ones.</p>
 <section id="ivf-pq" class="level3">
 <h3 class="anchored" data-anchor-id="ivf-pq">IVF-PQ</h3>
 <p>In a simple terms, the IVF part of the index helps us find the right area to search in, like narrowing down which part of a library to look in for a specific book. The PQ part helps us quickly compare the query (what we’re looking for) with the actual books (database vectors), making the search faster. It’s like having a shortcut to check if a book matches what we want.</p>
@@ -475,17 +474,16 @@ Recall_{\text{BERT}} = \frac{1}{|r|} \sum_{i \in r} \max_{j \in p} \vec{i}^T \ve
 <h2 class="anchored" data-anchor-id="data-source-and-parameters-tuning">Data source and parameters tuning</h2>
 <section id="pay-attention-to-base-documents" class="level3">
 <h3 class="anchored" data-anchor-id="pay-attention-to-base-documents">Pay attention to base documents</h3>
-<p>The most important part of RAG is data source which creates a base knowledge for the LLM to generate the answer. The quality of the base documents will directly affect the quality of the answer. To improve the quality of answer, we should do some sorts preprocessing / cleaning / filtering to the base documents.</p>
+<p>The most important part of RAG is data source which creates a base knowledge for the LLM to generate the answer. The quality of the base documents will directly affect the quality of the answer. Are documents broken out logically? Are topics covered in one place or many separate places? If you, as a human, can’t easily tell which document you would need to look at to answer common queries, your retrieval system won’t be able to either. To improve the quality of answer, we should do some sorts preprocessing / cleaning / filtering to the base documents.</p>
 </section>
 <section id="tune-different-indexing-chunking-approaches" class="level3">
 <h3 class="anchored" data-anchor-id="tune-different-indexing-chunking-approaches">Tune different indexing / chunking approaches</h3>
-</section>
-<section id="adding-meta-data-for-filtering" class="level3">
-<h3 class="anchored" data-anchor-id="adding-meta-data-for-filtering">Adding meta-data for filtering</h3>
+<p>One of the most common strategies for improving retrieval performance is to experiment with different indexing and chunking approaches. For example, you can try different chunk sizes, chunk overlap, and chunking strategies (e.g., sentence, paragraph, etc.). ### Adding meta-data for filtering</p>
 <p>A highly effective strategy for enhancing the retrieval process involves augmenting your data chunks with metadata, which can subsequently be leveraged to refine result processing. One commonly used metadata tag is the “date” because it facilitates filtering by recency.</p>
 </section>
 <section id="iterate-over-your-prompt" class="level3">
 <h3 class="anchored" data-anchor-id="iterate-over-your-prompt">Iterate over your prompt</h3>
+<p>You can hack the RAG such that you do allow the LLM to rely on its own knowledge if it can’t find a good answer in the context or adaptes different styles for the answer.</p>
 </section>
 <section id="fine-tune-your-embedding-model." class="level3">
 <h3 class="anchored" data-anchor-id="fine-tune-your-embedding-model.">Fine-tune your embedding model.</h3>
