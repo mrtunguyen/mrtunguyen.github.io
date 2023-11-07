@@ -146,12 +146,12 @@ ul.task-list li input[type="checkbox"] {
     <h2 id="toc-title">On this page</h2>
    
   <ul>
-  <li><a href="#how-rag-typically-works" id="toc-how-rag-typically-works" class="nav-link active" data-scroll-target="#how-rag-typically-works">How RAG typically works?</a></li>
-  <li><a href="#challenges" id="toc-challenges" class="nav-link" data-scroll-target="#challenges">Challenges</a>
+  <li><a href="#challenges" id="toc-challenges" class="nav-link active" data-scroll-target="#challenges">Challenges</a>
   <ul class="collapse">
   <li><a href="#hallucinations" id="toc-hallucinations" class="nav-link" data-scroll-target="#hallucinations">Hallucinations</a></li>
   <li><a href="#hard-to-evaluate" id="toc-hard-to-evaluate" class="nav-link" data-scroll-target="#hard-to-evaluate">Hard to evaluate</a></li>
   <li><a href="#put-into-production" id="toc-put-into-production" class="nav-link" data-scroll-target="#put-into-production">Put into production</a></li>
+  <li><a href="#how-rag-typically-works" id="toc-how-rag-typically-works" class="nav-link" data-scroll-target="#how-rag-typically-works">How RAG typically works?</a></li>
   </ul></li>
   <li><a href="#retrieval-component" id="toc-retrieval-component" class="nav-link" data-scroll-target="#retrieval-component">Retrieval Component</a>
   <ul class="collapse">
@@ -165,8 +165,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#indexing-technique" id="toc-indexing-technique" class="nav-link" data-scroll-target="#indexing-technique">Indexing Technique</a>
   <ul class="collapse">
   <li><a href="#ivf-pq" id="toc-ivf-pq" class="nav-link" data-scroll-target="#ivf-pq">IVF-PQ</a></li>
-  <li><a href="#hierarchical-navigable-small-words" id="toc-hierarchical-navigable-small-words" class="nav-link" data-scroll-target="#hierarchical-navigable-small-words">Hierarchical Navigable Small Words</a></li>
-  <li><a href="#vamana" id="toc-vamana" class="nav-link" data-scroll-target="#vamana">Vamana</a></li>
+  <li><a href="#hierarchical-navigable-small-words-hnsw" id="toc-hierarchical-navigable-small-words-hnsw" class="nav-link" data-scroll-target="#hierarchical-navigable-small-words-hnsw">Hierarchical Navigable Small Words (HNSW)</a></li>
   </ul></li>
   <li><a href="#retrieval-approaches" id="toc-retrieval-approaches" class="nav-link" data-scroll-target="#retrieval-approaches">Retrieval Approaches</a></li>
   </ul></li>
@@ -222,13 +221,6 @@ ul.task-list li input[type="checkbox"] {
 <li><strong>Enhanced Accuracy</strong>: Retrieval can significantly improve the accuracy of responses. By retrieving information from reliable sources, RAG models can validate the information they generate, reducing the risk of producing incorrect or misleading answers.</li>
 <li><strong>Data Freshness</strong>: Information retrieved from external sources can be more up-to-date and reflect real-time changes. This is crucial in fields where information quickly becomes obsolete, such as news, finance, or healthcare.</li>
 </ol>
-<section id="how-rag-typically-works" class="level3">
-<h3 class="anchored" data-anchor-id="how-rag-typically-works">How RAG typically works?</h3>
-<ol type="1">
-<li><strong>Retrieval Component</strong>: In the retrieval phase, an external search mechanism is employed to retrieve relevant information or documents from a predefined knowledge base or data source. This can include web pages, databases, documents, or any other structured or unstructured data.</li>
-<li><strong>Generation Component</strong>: After retrieving relevant information, the generation component, often powered by an LLM like GPT-3 or GPT-4, takes over. It generates human-readable and contextually relevant responses, using the retrieved information as a source of knowledge.</li>
-</ol>
-</section>
 <section id="challenges" class="level1">
 <h1>Challenges</h1>
 <section id="hallucinations" class="level3">
@@ -242,6 +234,13 @@ ul.task-list li input[type="checkbox"] {
 <section id="put-into-production" class="level3">
 <h3 class="anchored" data-anchor-id="put-into-production">Put into production</h3>
 <p>Prototyping a RAG application is easy, but making it performant, robust, and scalable to a large knowledge corpus is hard. While we can easily find many tutorials online with only 10 lines of code telling how easy it is to do a RAG over your own documents, the big challenge still sits there with big number of documents to ingest in production, many queries at the same time with a large number of users etc.</p>
+</section>
+<section id="how-rag-typically-works" class="level3">
+<h3 class="anchored" data-anchor-id="how-rag-typically-works">How RAG typically works?</h3>
+<ol type="1">
+<li><strong>Retrieval Component</strong>: In the retrieval phase, an external search mechanism is employed to retrieve relevant information or documents from a predefined knowledge base or data source. This can include web pages, databases, documents, or any other structured or unstructured data.</li>
+<li><strong>Generation Component</strong>: After retrieving relevant information, the generation component, often powered by an LLM like GPT-3 or GPT-4, takes over. It generates human-readable and contextually relevant responses, using the retrieved information as a source of knowledge.</li>
+</ol>
 </section>
 </section>
 <section id="retrieval-component" class="level1">
@@ -300,12 +299,9 @@ ul.task-list li input[type="checkbox"] {
 <p>In a simple terms, the IVF part of the index helps us find the right area to search in, like narrowing down which part of a library to look in for a specific book. The PQ part helps us quickly compare the query (what we’re looking for) with the actual books (database vectors), making the search faster. It’s like having a shortcut to check if a book matches what we want.</p>
 <p>When we use both IVF and PQ together, we get a big boost in speed because PQ helps with speed, and IVF helps us find more of the right books, improving the chances of finding what we’re looking for.</p>
 </section>
-<section id="hierarchical-navigable-small-words" class="level3">
-<h3 class="anchored" data-anchor-id="hierarchical-navigable-small-words">Hierarchical Navigable Small Words</h3>
+<section id="hierarchical-navigable-small-words-hnsw" class="level3">
+<h3 class="anchored" data-anchor-id="hierarchical-navigable-small-words-hnsw">Hierarchical Navigable Small Words (HNSW)</h3>
 <p>The Hierarchical Navigable Small-World (HNSW) graph algorithm is widely regarded as one of the most popular methods for constructing vector indexes. In fact, many database vendors currently favor it as their primary choice.</p>
-</section>
-<section id="vamana" class="level3">
-<h3 class="anchored" data-anchor-id="vamana">Vamana</h3>
 </section>
 </section>
 <section id="retrieval-approaches" class="level2">
