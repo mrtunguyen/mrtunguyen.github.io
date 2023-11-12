@@ -191,11 +191,17 @@ ul.task-list li input[type="checkbox"] {
   <ul class="collapse">
   <li><a href="#decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" id="toc-decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis" class="nav-link" data-scroll-target="#decoupling-chunks-used-for-retrieval-vs.-chunks-used-for-synthesis">Decoupling Chunks Used for Retrieval vs.&nbsp;Chunks Used for Synthesis</a></li>
   <li><a href="#structured-retrieval-for-larger-document-sets" id="toc-structured-retrieval-for-larger-document-sets" class="nav-link" data-scroll-target="#structured-retrieval-for-larger-document-sets">Structured Retrieval for Larger Document Sets</a></li>
+  <li><a href="#using-reranker-model" id="toc-using-reranker-model" class="nav-link" data-scroll-target="#using-reranker-model">Using Reranker model</a></li>
   </ul></li>
   <li><a href="#caching" id="toc-caching" class="nav-link" data-scroll-target="#caching">Caching</a>
   <ul class="collapse">
   <li><a href="#semantic-cache-results" id="toc-semantic-cache-results" class="nav-link" data-scroll-target="#semantic-cache-results">Semantic cache results</a></li>
   </ul></li>
+  </ul></li>
+  <li><a href="#advanced-papersresearch-on-rag" id="toc-advanced-papersresearch-on-rag" class="nav-link" data-scroll-target="#advanced-papersresearch-on-rag">Advanced Papers/Research on RAG</a>
+  <ul class="collapse">
+  <li><a href="#self-rag-learning-to-retrieve-generate-and-critique-through-self-reflection" id="toc-self-rag-learning-to-retrieve-generate-and-critique-through-self-reflection" class="nav-link" data-scroll-target="#self-rag-learning-to-retrieve-generate-and-critique-through-self-reflection">Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection</a></li>
+  <li><a href="#rag-fusion" id="toc-rag-fusion" class="nav-link" data-scroll-target="#rag-fusion">RAG-Fusion</a></li>
   </ul></li>
   <li><a href="#reference" id="toc-reference" class="nav-link" data-scroll-target="#reference">Reference</a></li>
   </ul>
@@ -497,6 +503,10 @@ Recall_{\text{BERT}} = \frac{1}{|r|} \sum_{i \in r} \max_{j \in p} \vec{i}^T \ve
 <p>A significant drawback of the standard RAG stack, which involves top-k retrieval and basic text splitting, becomes evident when dealing with a large number of documents, such as 100 different PDFs. In this scenario, when you have a query, it’s often essential to utilize structured information to enhance precision in retrieval. For instance, if your question pertains to only two specific PDFs, relying solely on raw embedding similarity with text chunks may not be sufficient.</p>
 <p>One effective approach to address this issue is to embed document summaries and establish a mapping to text chunks within each document. This enables retrieval at the document level initially, prioritizing the identification of relevant documents before delving into chunk-level analysis.</p>
 </section>
+<section id="using-reranker-model" class="level3">
+<h3 class="anchored" data-anchor-id="using-reranker-model">Using Reranker model</h3>
+<p>Semantic search may yield top-k results that are too similar to each other. To ensure a wider array of snippets, it is beneficial to re-rank the results based on other factors such as metadata and keyword matches. This diversification of snippets can lead to a more nuanced and comprehensive context for the LLM to generate responses. Re-ranker can be based on a cross-encoder. Some of the popular reranker models are: - <a href="https://txt.cohere.com/rerank/">CohereAI</a> - <a href="https://huggingface.co/BAAI/bge-reranker-base">bge-reranker-base</a> / <a href="https://huggingface.co/BAAI/bge-reranker-large">bge-reranker-large</a></p>
+</section>
 </section>
 <section id="caching" class="level2">
 <h2 class="anchored" data-anchor-id="caching">Caching</h2>
@@ -505,6 +515,23 @@ Recall_{\text{BERT}} = \frac{1}{|r|} \sum_{i \in r} \max_{j \in p} \vec{i}^T \ve
 <p>Traditional caching systems use various techniques to store data or queries so that when another user asks the same or similar query, you don’t have to make a full round trip to generate the same context. However, traditional caching systems use an exact keyword match, which doesn’t work with LLMs where the queries are in natural language. So, how do you ensure you’re not performing a full retrieval each time when the queries are similar?</p>
 <p>This is where&nbsp;<a href="https://github.com/zilliztech/GPTCache">CacheGPT</a>&nbsp;comes in. CacheGPT uses semantic search to match queries against previously asked queries, and if there’s a match, you simply return the last context instead of performing a full retrieval. CacheGPT is an open-source library, and you can refer to its&nbsp;<a href="https://gptcache.readthedocs.io/en/latest/usage.html">documentation</a>&nbsp;to configure it to your requirements.</p>
 </section>
+</section>
+</section>
+<section id="advanced-papersresearch-on-rag" class="level1">
+<h1>Advanced Papers/Research on RAG</h1>
+<section id="self-rag-learning-to-retrieve-generate-and-critique-through-self-reflection" class="level3">
+<h3 class="anchored" data-anchor-id="self-rag-learning-to-retrieve-generate-and-critique-through-self-reflection"><a href="https://arxiv.org/abs/2310.11511">Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection</a></h3>
+<p>Your RAG efficiency relies heavily on factors like text chunking methods, embeddings, and retrieval techniques. When indiscriminately retrieving a fixed number of passages, or getting irrelevant content, it can lead to bad responses and reduce LLM versatility. Self-Reflective Retrieval-Augmented Generation (Self-RAG) is a new approach that teach a LLM to retrieve, generate, and critique to enhance the factuality and quality of its responses. In contrast to the conventional Retrieval-Augmented Generation (RAG) approach, Self-RAG retrieves information on-demand, meaning it can retrieve multiple times or not at all depending on the queries it encounters. It also evaluates its responses from various angles, using special tokens called “reflection tokens”. These tokens allow the LLM to control its behavior and tailor it to specific task requirements during the inference phase. <img src="images/self-rag.png" class="img-fluid" alt="Self-RAG retrieves on demand (e.g., can retrieve multiple times or completely skip retrieval) given diverse queries, and criticize its own generation"></p>
+<p>Here’s how Self-RAG works:</p>
+<ul>
+<li>Retrieve: Self-RAG starts by determining if adding retrieved information to the response would be helpful. If so, it signals a retrieval process and asks an external retrieval module to find relevant documents.</li>
+<li>Generate: If retrieval isn’t needed, Self-RAG predicts the next part of the response, just like a regular language model. If retrieval is required, it first evaluates whether the retrieved documents are relevant and then generates the next part of the response based on what it found.</li>
+<li>Critique: If retrieval is necessary, Self-RAG checks if the passages it retrieved support the response. It also evaluates the overall quality of the response.</li>
+</ul>
+</section>
+<section id="rag-fusion" class="level3">
+<h3 class="anchored" data-anchor-id="rag-fusion"><a href="https://medium.com/towards-data-science/forget-rag-the-future-is-rag-fusion-1147298d8ad1">RAG-Fusion</a></h3>
+<p>Why RAG-Fusion? - Addressing Gaps: It tackles the constraints inherent in RAG by generating multiple user queries and reranking the results. - Enhanced Search: Utilises <strong>Reciprocal Rank Fusion</strong> and custom vector score weighting for comprehensive, accurate results. <img src="images/rag-fusion.jpeg" class="img-fluid" alt="Reciprocal Rank Fusion Positional Reranking System. Source"></p>
 </section>
 </section>
 <section id="reference" class="level1">
