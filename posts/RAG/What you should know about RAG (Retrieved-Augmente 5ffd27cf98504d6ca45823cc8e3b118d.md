@@ -290,6 +290,12 @@ A significant drawback of the standard RAG stack, which involves top-k retrieval
 
 One effective approach to address this issue is to embed document summaries and establish a mapping to text chunks within each document. This enables retrieval at the document level initially, prioritizing the identification of relevant documents before delving into chunk-level analysis.
 
+### Using Reranker model 
+Semantic search may yield top-k results that are too similar to each other. To ensure a wider array of snippets, it is beneficial to re-rank the results based on other factors such as metadata and keyword matches. This diversification of snippets can lead to a more nuanced and comprehensive context for the LLM to generate responses. Re-ranker can be based on a cross-encoder.
+Some of the popular reranker models are:
+- [CohereAI](https://txt.cohere.com/rerank/)
+- [bge-reranker-base](https://huggingface.co/BAAI/bge-reranker-base) / [bge-reranker-large](https://huggingface.co/BAAI/bge-reranker-large)
+
 ## Caching
 
 ### Semantic cache results
@@ -297,6 +303,27 @@ One effective approach to address this issue is to embed document summaries and 
 Traditional caching systems use various techniques to store data or queries so that when another user asks the same or similar query, you don’t have to make a full round trip to generate the same context. However, traditional caching systems use an exact keyword match, which doesn’t work with LLMs where the queries are in natural language. So, how do you ensure you’re not performing a full retrieval each time when the queries are similar?
 
 This is where [CacheGPT](https://github.com/zilliztech/GPTCache) comes in. CacheGPT uses semantic search to match queries against previously asked queries, and if there’s a match, you simply return the last context instead of performing a full retrieval. CacheGPT is an open-source library, and you can refer to its [documentation](https://gptcache.readthedocs.io/en/latest/usage.html) to configure it to your requirements.
+
+# Advanced Papers/Research on RAG
+### [Self-RAG: Learning to Retrieve, Generate, and Critique through Self-Reflection](https://arxiv.org/abs/2310.11511)
+Your RAG efficiency relies heavily on factors like text chunking methods, embeddings, and retrieval techniques. When indiscriminately retrieving a fixed number of passages, or getting irrelevant content, it can lead to bad responses and reduce LLM versatility. 
+Self-Reflective Retrieval-Augmented Generation (Self-RAG) is a new approach that teach a LLM to retrieve, generate, and critique to enhance the factuality and quality of its responses. In contrast to the conventional Retrieval-Augmented Generation (RAG) approach, Self-RAG retrieves information on-demand, meaning it can retrieve multiple times or not at all depending on the queries it encounters.
+It also evaluates its responses from various angles, using special tokens called "reflection tokens". These tokens allow the LLM to control its behavior and tailor it to specific task requirements during the inference phase.
+![Self-RAG retrieves on demand (e.g., can retrieve multiple times or completely skip retrieval) given diverse queries, and criticize its own generation](images/self-rag.png)
+
+Here's how Self-RAG works:
+
+- Retrieve: Self-RAG starts by determining if adding retrieved information to the response would be helpful. If so, it signals a retrieval process and asks an external retrieval module to find relevant documents.
+- Generate: If retrieval isn't needed, Self-RAG predicts the next part of the response, just like a regular language model. If retrieval is required, it first evaluates whether the retrieved documents are relevant and then generates the next part of the response based on what it found.
+- Critique: If retrieval is necessary, Self-RAG checks if the passages it retrieved support the response. It also evaluates the overall quality of the response.
+
+### [RAG-Fusion](https://medium.com/towards-data-science/forget-rag-the-future-is-rag-fusion-1147298d8ad1)
+Why RAG-Fusion?
+- Addressing Gaps: It tackles the constraints inherent in RAG by generating multiple user queries and reranking the results.
+- Enhanced Search: Utilises **Reciprocal Rank Fusion** and custom vector score weighting for comprehensive, accurate results.
+![Reciprocal Rank Fusion Positional Reranking System. [Source](https://medium.com/towards-data-science/forget-rag-the-future-is-rag-fusion-1147298d8ad1)](images/rag-fusion.jpeg)
+
+
 
 # Reference
 
