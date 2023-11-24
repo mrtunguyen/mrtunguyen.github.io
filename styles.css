@@ -81,12 +81,12 @@ code {
 }
 
 .quarto-title-banner, .navbar-light, .navbar-dark {
-    background: linear-gradient(90deg, rgb(198, 228, 126) 0%, rgb(209, 205, 81)00%);
+    background: linear-gradient(90deg, rgb(175, 164, 127) 0%, rgb(161, 140, 170) 100%);
     /* background: linear-gradient(90deg, rgba(59,112,254,1) 0%, rgba(49,195,135,1) 100%); */
 }
 
 .quarto-post {
-    background-color: rgba(126, 71, 71, 0.8);
+    background-color: rgba(243, 240, 240, 0.8);
     padding-top: 2em;
     padding-left: 1em;
     padding-right: 1em;
