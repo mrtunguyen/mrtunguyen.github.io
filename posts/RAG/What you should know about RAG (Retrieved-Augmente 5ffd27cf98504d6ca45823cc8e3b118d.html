@@ -164,7 +164,7 @@ ul.task-list li input[type="checkbox"] {
   <li><a href="#approximate-nearest-neighbors-ann" id="toc-approximate-nearest-neighbors-ann" class="nav-link" data-scroll-target="#approximate-nearest-neighbors-ann">Approximate nearest neighbors (ANN)</a></li>
   <li><a href="#indexing-technique" id="toc-indexing-technique" class="nav-link" data-scroll-target="#indexing-technique">Indexing Technique</a>
   <ul class="collapse">
-  <li><a href="#ivf-pq" id="toc-ivf-pq" class="nav-link" data-scroll-target="#ivf-pq">IVF-PQ</a></li>
+  <li><a href="#ivf-pq-inverted-file-index---product-quantization" id="toc-ivf-pq-inverted-file-index---product-quantization" class="nav-link" data-scroll-target="#ivf-pq-inverted-file-index---product-quantization">IVF-PQ (Inverted file index - product quantization)</a></li>
   <li><a href="#hierarchical-navigable-small-words-hnsw" id="toc-hierarchical-navigable-small-words-hnsw" class="nav-link" data-scroll-target="#hierarchical-navigable-small-words-hnsw">Hierarchical Navigable Small Words (HNSW)</a></li>
   </ul></li>
   <li><a href="#retrieval-approaches" id="toc-retrieval-approaches" class="nav-link" data-scroll-target="#retrieval-approaches">Retrieval Approaches</a></li>
@@ -300,14 +300,29 @@ ul.task-list li input[type="checkbox"] {
 <p><strong>What is the index?</strong></p>
 <p>Data within a vector database is organized through <strong>indexing</strong>, a process that involves constructing data structures known as indexes. These indexes facilitate efficient vector retrieval by swiftly reducing the search scope.</p>
 <p>This <a href="https://thedataquarry.com/posts/vector-db-3">great blog about indexes from thedataquarry</a> gives a best overview on this subject. In our blog, we will talk about the most popular ones.</p>
-<section id="ivf-pq" class="level3">
-<h3 class="anchored" data-anchor-id="ivf-pq">IVF-PQ</h3>
-<p>In a simple terms, the IVF part of the index helps us find the right area to search in, like narrowing down which part of a library to look in for a specific book. The PQ part helps us quickly compare the query (what we’re looking for) with the actual books (database vectors), making the search faster. It’s like having a shortcut to check if a book matches what we want.</p>
+<section id="ivf-pq-inverted-file-index---product-quantization" class="level3">
+<h3 class="anchored" data-anchor-id="ivf-pq-inverted-file-index---product-quantization">IVF-PQ (Inverted file index - product quantization)</h3>
+<p>In a simple terms, the Inverted file index (IVF) part of the index helps us find the right area to search in, like narrowing down which part of a library to look in for a specific book. The product quantization (PQ) part helps us quickly compare the query (what we’re looking for) with the actual books (database vectors), making the search faster. It’s like having a shortcut to check if a book matches what we want.</p>
 <p>When we use both IVF and PQ together, we get a big boost in speed because PQ helps with speed, and IVF helps us find more of the right books, improving the chances of finding what we’re looking for.</p>
 </section>
 <section id="hierarchical-navigable-small-words-hnsw" class="level3">
 <h3 class="anchored" data-anchor-id="hierarchical-navigable-small-words-hnsw">Hierarchical Navigable Small Words (HNSW)</h3>
-<p>The Hierarchical Navigable Small-World (HNSW) graph algorithm is widely regarded as one of the most popular methods for constructing vector indexes. In fact, many database vendors currently favor it as their primary choice.</p>
+<p>The Hierarchical Navigable Small-World (HNSW) graph algorithm is widely regarded as one of the most popular methods for constructing vector indexes. In fact, many database vendors currently favor it as their primary choice. The idea comes from this paper <a href="https://arxiv.org/abs/1603.09320">Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs</a>.</p>
+<p>Let break down the key concepts in simpler terms: - Small-World:</p>
+<pre><code>In a small-world network, most nodes can be reached from every other node by a small number of steps or connections. It's a concept often seen in social networks where people are surprisingly well-connected even though the world is large.</code></pre>
+<ul>
+<li><p>Navigable:</p>
+<p>Navigability refers to the ease with which you can travel or find your way through something. In the context of HNSW, it means the structure allows for efficient navigation when searching for similar items.</p></li>
+<li><p>Hierarchical:</p>
+<p>Hierarchy involves organizing elements into levels or layers, where each level represents a different level of detail or abstraction. In HNSW, hierarchical structures are used to organize the data in a way that makes searching for similar items more efficient.</p></li>
+<li><p>HNSW in Similarity Search:</p>
+<ul>
+<li><p>In similarity search, the goal is to find items in a dataset that are similar to a given query item. HNSW achieves this by creating a hierarchical graph where each node represents a data point, and connections between nodes represent similarity.</p></li>
+<li><p>The hierarchy allows for faster search because it narrows down the potential similar items, starting from a coarse level and progressively refining the search. This hierarchical organization helps in quickly discarding non-relevant items.</p></li>
+<li><p>The “navigable” aspect ensures that, even within these hierarchical levels, the structure facilitates efficient movement towards the most similar items.</p></li>
+</ul></li>
+</ul>
+<p>In simple terms, think of HNSW as a smart way of organizing information in a large dataset so that when you want to find something similar to a given item, you can do it quickly by following a well-organized path through the data, thanks to its small-world and hierarchical properties. It’s like having a well-structured map that helps you navigate efficiently to find what you’re looking for.</p>
 </section>
 </section>
 <section id="retrieval-approaches" class="level2">
