@@ -2,7 +2,7 @@ project:
   type: website
 
 website:
-  title: "Machine learning Blog"
+  title: "ML Blog"
   navbar:
     right:
       - about.qmd
@@ -15,5 +15,8 @@ format:
     theme: cosmo
     css: styles.css
 
+comments:
+  utterances:
+    repo: https://github.com/mrtunguyen/mrtunguyen.github.io
 
 

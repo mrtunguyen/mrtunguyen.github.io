@@ -100,16 +100,37 @@ Data within a vector database is organized through **indexing**, a process that 
 
 This [great blog about indexes from thedataquarry](https://thedataquarry.com/posts/vector-db-3) gives a best overview on this subject. In our blog, we will talk about the most popular ones.
 
-### IVF-PQ
+### IVF-PQ (Inverted file index - product quantization)
 
-In a simple terms, the IVF part of the index helps us find the right area to search in, like narrowing down which part of a library to look in for a specific book. The PQ part helps us quickly compare the query (what we're looking for) with the actual books (database vectors), making the search faster. It's like having a shortcut to check if a book matches what we want.
+In a simple terms, the Inverted file index (IVF) part of the index helps us find the right area to search in, like narrowing down which part of a library to look in for a specific book. The product quantization (PQ) part helps us quickly compare the query (what we're looking for) with the actual books (database vectors), making the search faster. It's like having a shortcut to check if a book matches what we want.
 
 When we use both IVF and PQ together, we get a big boost in speed because PQ helps with speed, and IVF helps us find more of the right books, improving the chances of finding what we're looking for. 
 
 ### Hierarchical Navigable Small Words (HNSW)
 
-The Hierarchical Navigable Small-World (HNSW) graph algorithm is widely regarded as one of the most popular methods for constructing vector indexes. In fact, many database vendors currently favor it as their primary choice. 
+The Hierarchical Navigable Small-World (HNSW) graph algorithm is widely regarded as one of the most popular methods for constructing vector indexes. In fact, many database vendors currently favor it as their primary choice. The idea comes from this paper [Efficient and robust approximate nearest neighbor search using Hierarchical Navigable Small World graphs](https://arxiv.org/abs/1603.09320).
 
+Let break down the key concepts in simpler terms:
+
+- Small-World:
+
+    In a small-world network, most nodes can be reached from every other node by a small number of steps or connections. It's a concept often seen in social networks where people are surprisingly well-connected even though the world is large.
+- Navigable:
+
+    Navigability refers to the ease with which you can travel or find your way through something. In the context of HNSW, it means the structure allows for efficient navigation when searching for similar items.
+
+- Hierarchical:
+
+    Hierarchy involves organizing elements into levels or layers, where each level represents a different level of detail or abstraction. In HNSW, hierarchical structures are used to organize the data in a way that makes searching for similar items more efficient.
+- HNSW in Similarity Search:
+
+    - In similarity search, the goal is to find items in a dataset that are similar to a given query item. HNSW achieves this by creating a hierarchical graph where each node represents a data point, and connections between nodes represent similarity.
+
+    - The hierarchy allows for faster search because it narrows down the potential similar items, starting from a coarse level and progressively refining the search. This hierarchical organization helps in quickly discarding non-relevant items.
+
+    - The "navigable" aspect ensures that, even within these hierarchical levels, the structure facilitates efficient movement towards the most similar items.
+
+In simple terms, think of HNSW as a smart way of organizing information in a large dataset so that when you want to find something similar to a given item, you can do it quickly by following a well-organized path through the data, thanks to its small-world and hierarchical properties. It's like having a well-structured map that helps you navigate efficiently to find what you're looking for.
 
 ## Retrieval Approaches
 
