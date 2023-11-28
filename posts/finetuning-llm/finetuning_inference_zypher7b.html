@@ -193,6 +193,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#training-dataset" id="toc-training-dataset" class="nav-link" data-scroll-target="#training-dataset">Training Dataset</a></li>
   <li><a href="#training" id="toc-training" class="nav-link" data-scroll-target="#training">Training</a></li>
+  <li><a href="#inference" id="toc-inference" class="nav-link" data-scroll-target="#inference">Inference</a></li>
   </ul></li>
   </ul>
 </nav>
@@ -341,14 +342,9 @@ wandb: Currently logged in as: uthnaht. Use `wandb login --relogin` to force rel
 </div>
 </div>
 <p>Let’s first define the model, then load and preprocess the dataset. We will use a sharded Zephyr 7B to save memory.</p>
-<div class="cell" data-tags="[]" data-execution_count="4">
+<div class="cell" data-tags="[]" data-execution_count="2">
 <div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>model_name <span class="op">=</span> <span class="st">"anakin87/zephyr-7b-alpha-sharded"</span></span>
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>tokenizer <span class="op">=</span> AutoTokenizer.from_pretrained(model_name)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Downloading tokenizer_config.json: 100%|██████████| 1.43k/1.43k [00:00&lt;00:00, 6.32MB/s]
-Downloading tokenizer.json: 100%|██████████| 1.80M/1.80M [00:00&lt;00:00, 25.3MB/s]
-Downloading (…)cial_tokens_map.json: 100%|██████████| 168/168 [00:00&lt;00:00, 891kB/s]</code></pre>
-</div>
 </div>
 <section id="bits-and-bytes-config-loading-the-model" class="level4">
 <h4 class="anchored" data-anchor-id="bits-and-bytes-config-loading-the-model">Bits and Bytes Config &amp; Loading the Model</h4>
@@ -359,35 +355,37 @@ Downloading (…)cial_tokens_map.json: 100%|██████████| 168/
 <li>use NF4 (normalized fp4)</li>
 <li>compute type is bfloat16 (computations run in bfloat16)</li>
 </ul>
-<div class="cell" data-tags="[]" data-execution_count="5">
-<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>bnb_config <span class="op">=</span> BitsAndBytesConfig(</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    load_in_4bit<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    bnb_4bit_use_double_quant<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    bnb_4bit_quant_type<span class="op">=</span><span class="st">"nf4"</span>,</span>
-<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    bnb_4bit_compute_dtype<span class="op">=</span>torch.bfloat16,</span>
-<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>bnb_config <span class="op">=</span> BitsAndBytesConfig(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    load_in_4bit<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    bnb_4bit_use_double_quant<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    bnb_4bit_quant_type<span class="op">=</span><span class="st">"nf4"</span>,</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    bnb_4bit_compute_dtype<span class="op">=</span>torch.bfloat16,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Finally we load our model. We disable the cache to avoid the conflict with gradient checkpoint that we will enable right after.</p>
-<div class="cell" data-tags="[]" data-execution_count="7">
-<div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> AutoModelForCausalLM.from_pretrained(</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    model_name,</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    quantization_config<span class="op">=</span>bnb_config,</span>
-<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    cache_dir<span class="op">=</span><span class="st">"./cache"</span>,</span>
-<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    device_map<span class="op">=</span>{<span class="st">""</span>:<span class="dv">0</span>}  <span class="co"># Auto selects device to put model on.</span></span>
-<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>model.config.use_cache <span class="op">=</span> <span class="va">False</span></span>
-<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a><span class="co">#model.gradient_checkpointing_enable()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> AutoModelForCausalLM.from_pretrained(</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    model_name,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    quantization_config<span class="op">=</span>bnb_config,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    cache_dir<span class="op">=</span><span class="st">"/home/ec2-user/SageMaker/kaggle/cache"</span>,</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    device_map<span class="op">=</span>{<span class="st">""</span>:<span class="dv">0</span>}  <span class="co"># Auto selects device to put model on.</span></span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>model.config.use_cache <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a><span class="co">#model.gradient_checkpointing_enable()</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Loading checkpoint shards: 100%|██████████| 8/8 [00:05&lt;00:00,  1.48it/s]</code></pre>
+<pre><code>Loading checkpoint shards: 100%|██████████| 8/8 [00:05&lt;00:00,  1.57it/s]
+
+Downloading (…)of-00008.safetensors:  11%|█         | 199M/1.89G [00:18&lt;00:43, 39.1MB/s]</code></pre>
 </div>
 </div>
 <p>Next, we will do somethings special to enable us train the 7B model in a single GPU. - freezes the model weights - cast all non INT8 parameters (layer norm and lm head) to fp32 if the model is not gptq quantized - enable_input_require_grads: Enables the gradients for the input embeddings. This is useful for fine-tuning adapter weights while keeping the model weights fixed. - gradient_checkpointing_enable</p>
 <blockquote class="blockquote">
 <p>The gradient checkpoint is a technique to reduce the memory footprint of the model. It will save the activations of the model and recomputes them during the backward pass. This is a trade-off between memory and compute. We will use the gradient checkpoint to reduce the memory footprint of our model.</p>
 </blockquote>
-<div class="cell" data-tags="[]" data-execution_count="8">
-<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> prepare_model_for_kbit_training(model, use_gradient_checkpointing<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> prepare_model_for_kbit_training(model, use_gradient_checkpointing<span class="op">=</span><span class="va">True</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 </section>
 <section id="using-lora" class="level4">
@@ -402,47 +400,47 @@ Downloading (…)cial_tokens_map.json: 100%|██████████| 168/
 <li>`lora_dropout``: The dropout probability for Lora layers.</li>
 <li><code>bias</code>: Specifies if the bias parameters should be trained. Can be ‘none’, ‘all’ or ‘lora_only’. If ‘all’ or ‘lora_only’, the corresponding biases will be updated during training. Be aware that this means that, even when disabling the adapters, the model will not produce the same output as the base model would have without adaptation.</li>
 </ul>
-<div class="cell" data-tags="[]" data-execution_count="9">
-<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> create_peft_config(modules):</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    lora_alpha <span class="op">=</span> <span class="dv">16</span></span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    lora_dropout <span class="op">=</span> <span class="fl">0.1</span></span>
-<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    lora_r <span class="op">=</span> <span class="dv">8</span></span>
-<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>    peft_config <span class="op">=</span> LoraConfig(</span>
-<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        lora_alpha<span class="op">=</span>lora_alpha, <span class="co"># parameter for scaling</span></span>
-<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        lora_dropout<span class="op">=</span>lora_dropout, <span class="co"># dropout probability for layers</span></span>
-<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        target_modules<span class="op">=</span>modules,</span>
-<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>        r<span class="op">=</span>lora_r, <span class="co"># dimension of the updated matrices</span></span>
-<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>        bias<span class="op">=</span><span class="st">"none"</span>,</span>
-<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        task_type<span class="op">=</span><span class="st">"CAUSAL_LM"</span></span>
-<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> peft_config</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> create_peft_config(modules):</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    lora_alpha <span class="op">=</span> <span class="dv">16</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    lora_dropout <span class="op">=</span> <span class="fl">0.1</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    lora_r <span class="op">=</span> <span class="dv">8</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>    peft_config <span class="op">=</span> LoraConfig(</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        lora_alpha<span class="op">=</span>lora_alpha, <span class="co"># parameter for scaling</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>        lora_dropout<span class="op">=</span>lora_dropout, <span class="co"># dropout probability for layers</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>        target_modules<span class="op">=</span>modules,</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>        r<span class="op">=</span>lora_r, <span class="co"># dimension of the updated matrices</span></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        bias<span class="op">=</span><span class="st">"none"</span>,</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        task_type<span class="op">=</span><span class="st">"CAUSAL_LM"</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> peft_config</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Previous function needs the <code>target modules</code> to update the necessary matrices. The following function will return a list of layer names for LoRA to be applied to. These include the <code>q, k, o, v proj</code> layers and the gated, up, and down layers in the MLPs.</p>
-<div class="cell" data-tags="[]" data-execution_count="10">
-<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> find_all_linear_names(model):</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>    cls <span class="op">=</span> bnb.nn.Linear4bit <span class="co">#if args.bits == 4 else (bnb.nn.Linear8bitLt if args.bits == 8 else torch.nn.Linear)</span></span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    lora_module_names <span class="op">=</span> <span class="bu">set</span>()</span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, module <span class="kw">in</span> model.named_modules():</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">isinstance</span>(module, cls):</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>            names <span class="op">=</span> name.split(<span class="st">'.'</span>)</span>
-<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>            lora_module_names.add(names[<span class="dv">0</span>] <span class="cf">if</span> <span class="bu">len</span>(names) <span class="op">==</span> <span class="dv">1</span> <span class="cf">else</span> names[<span class="op">-</span><span class="dv">1</span>])</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># lm_head is often excluded.</span></span>
-<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="st">'lm_head'</span> <span class="kw">in</span> lora_module_names:  <span class="co"># needed for 16-bit</span></span>
-<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>        lora_module_names.remove(<span class="st">'lm_head'</span>)</span>
-<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">list</span>(lora_module_names)</span>
-<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>modules <span class="op">=</span> find_all_linear_names(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> find_all_linear_names(model):</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    cls <span class="op">=</span> bnb.nn.Linear4bit <span class="co">#if args.bits == 4 else (bnb.nn.Linear8bitLt if args.bits == 8 else torch.nn.Linear)</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    lora_module_names <span class="op">=</span> <span class="bu">set</span>()</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, module <span class="kw">in</span> model.named_modules():</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">isinstance</span>(module, cls):</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>            names <span class="op">=</span> name.split(<span class="st">'.'</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>            lora_module_names.add(names[<span class="dv">0</span>] <span class="cf">if</span> <span class="bu">len</span>(names) <span class="op">==</span> <span class="dv">1</span> <span class="cf">else</span> names[<span class="op">-</span><span class="dv">1</span>])</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    <span class="co"># lm_head is often excluded.</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="st">'lm_head'</span> <span class="kw">in</span> lora_module_names:  <span class="co"># needed for 16-bit</span></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>        lora_module_names.remove(<span class="st">'lm_head'</span>)</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">list</span>(lora_module_names)</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>modules <span class="op">=</span> find_all_linear_names(model)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Finally, we can create our LoRA-applied model which is wrapped as PeftModel</p>
-<div class="cell" data-tags="[]" data-execution_count="13">
-<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>peft_config <span class="op">=</span> create_peft_config(modules)</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> get_peft_model(model, peft_config)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>peft_config <span class="op">=</span> create_peft_config(modules)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> get_peft_model(model, peft_config)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Then we can know how many parameters are trainable in our model and measure the memory footprint of our model.</p>
-<div class="cell" data-tags="[]" data-execution_count="14">
-<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>trainable, total <span class="op">=</span> model.get_nb_trainable_parameters()</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Trainable: </span><span class="sc">{</span>trainable<span class="sc">}</span><span class="ss"> | total: </span><span class="sc">{</span>total<span class="sc">}</span><span class="ss"> | Percentage: </span><span class="sc">{</span>trainable<span class="op">/</span>total<span class="op">*</span><span class="dv">100</span><span class="sc">:.4f}</span><span class="ss">%"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>trainable, total <span class="op">=</span> model.get_nb_trainable_parameters()</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Trainable: </span><span class="sc">{</span>trainable<span class="sc">}</span><span class="ss"> | total: </span><span class="sc">{</span>total<span class="sc">}</span><span class="ss"> | Percentage: </span><span class="sc">{</span>trainable<span class="op">/</span>total<span class="op">*</span><span class="dv">100</span><span class="sc">:.4f}</span><span class="ss">%"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Trainable: 20971520 | total: 7262703616 | Percentage: 0.2888%</code></pre>
 </div>
@@ -451,20 +449,10 @@ Downloading (…)cial_tokens_map.json: 100%|██████████| 168/
 <section id="training-dataset" class="level3">
 <h3 class="anchored" data-anchor-id="training-dataset">Training Dataset</h3>
 <p>We are going to download and use the Databricks Dolly 15k dataset, which contains 15,000 prompt/response pairs. It was crafted by over 5,000 Databricks employees during March and April of 2023.</p>
-<div class="cell" data-tags="[]" data-execution_count="31">
-<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> load_dataset(<span class="st">"databricks/databricks-dolly-15k"</span>, </span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>                       split<span class="op">=</span><span class="st">"train"</span>, </span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>                       cache_dir<span class="op">=</span><span class="st">"/home/ec2-user/SageMaker/kaggle/cache"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
-<div class="cell-output cell-output-stderr">
-<pre><code>Downloading readme: 100%|██████████| 8.20k/8.20k [00:00&lt;00:00, 20.5MB/s]
-Downloading data files:   0%|          | 0/1 [00:00&lt;?, ?it/s]
-Downloading data:   0%|          | 0.00/13.1M [00:00&lt;?, ?B/s]
-Downloading data:  32%|███▏      | 4.19M/13.1M [00:00&lt;00:00, 18.6MB/s]
-Downloading data: 100%|██████████| 13.1M/13.1M [00:00&lt;00:00, 33.2MB/s]
-Downloading data files: 100%|██████████| 1/1 [00:00&lt;00:00,  2.50it/s]
-Extracting data files: 100%|██████████| 1/1 [00:00&lt;00:00, 566.34it/s]
-Generating train split: 15011 examples [00:00, 304827.99 examples/s]</code></pre>
-</div>
+<div class="cell" data-tags="[]" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> load_dataset(<span class="st">"databricks/databricks-dolly-15k"</span>, </span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>                       split<span class="op">=</span><span class="st">"train"</span>, </span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>                       cache_dir<span class="op">=</span><span class="st">"/home/ec2-user/SageMaker/kaggle/cache"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <section id="take-a-peak-at-the-dataset" class="level4">
 <h4 class="anchored" data-anchor-id="take-a-peak-at-the-dataset">Take a peak at the dataset</h4>
@@ -475,20 +463,20 @@ Generating train split: 15011 examples [00:00, 304827.99 examples/s]</code></pre
 <li>A response: Answer to the instruction</li>
 <li>A category: Classify the sample between Open Q&amp;A, Closed Q&amp;A, Extract information from Wikipedia, Summarize information from Wikipedia, Brainstorming, Classification, Creative writing</li>
 </ul>
-<div class="cell" data-tags="[]" data-execution_count="34">
-<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Number of prompts: </span><span class="sc">{</span><span class="bu">len</span>(dataset)<span class="sc">}</span><span class="ss">'</span>)</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Column names are: </span><span class="sc">{</span>dataset<span class="sc">.</span>column_names<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Number of prompts: </span><span class="sc">{</span><span class="bu">len</span>(dataset)<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'Column names are: </span><span class="sc">{</span>dataset<span class="sc">.</span>column_names<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>Number of prompts: 15011
 Column names are: ['instruction', 'context', 'response', 'category']</code></pre>
 </div>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="35">
-<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> sample <span class="kw">in</span> dataset:</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> key, val <span class="kw">in</span> sample.items(): </span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>key<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>val<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">'-----'</span>)</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="13">
+<div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> sample <span class="kw">in</span> dataset:</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> key, val <span class="kw">in</span> sample.items(): </span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"</span><span class="sc">{</span>key<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>val<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="st">'-----'</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">break</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>instruction: When did Virgin Australia start operating?
 -----
@@ -501,139 +489,138 @@ category: closed_qa
 </div>
 </div>
 <div class="cell" data-tags="[]" data-execution_count="36">
-<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>wandb_project_name <span class="op">=</span> <span class="st">'finetuning_zephyr7b'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>wandb_project_name <span class="op">=</span> <span class="st">'finetuning_zephyr7b'</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>run <span class="op">=</span> wandb.init(</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    project<span class="op">=</span>wandb_project_name,  <span class="co"># Project name.</span></span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"log_dataset"</span>,          <span class="co"># name of the run within this project.</span></span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    config<span class="op">=</span>{                     <span class="co"># Configuration dictionary.</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"split"</span>: <span class="st">"train"</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    group<span class="op">=</span><span class="st">"dataset"</span>,             <span class="co"># Group runs. This run belongs in "dataset".</span></span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"dataset"</span>],            <span class="co"># Tags. More dynamic, low-level grouping.</span></span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    notes<span class="op">=</span><span class="st">"Logging subset of Dolly dataset."</span>  <span class="co"># Description about the run.</span></span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>run <span class="op">=</span> wandb.init(</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    project<span class="op">=</span>wandb_project_name,  <span class="co"># Project name.</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"log_dataset"</span>,          <span class="co"># name of the run within this project.</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    config<span class="op">=</span>{                     <span class="co"># Configuration dictionary.</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"split"</span>: <span class="st">"train"</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    group<span class="op">=</span><span class="st">"dataset"</span>,             <span class="co"># Group runs. This run belongs in "dataset".</span></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"dataset"</span>],            <span class="co"># Tags. More dynamic, low-level grouping.</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    notes<span class="op">=</span><span class="st">"Logging subset of Dolly dataset."</span>  <span class="co"># Description about the run.</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>) </span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Now we can log a subset of Dolly dataset (100 samples) to wandb.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> []</span>
-<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>):  </span>
-<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>    sample <span class="op">=</span> dataset[i]</span>
-<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    data.append([sample[<span class="st">'instruction'</span>], sample[<span class="st">'context'</span>], sample[<span class="st">"response"</span>], sample[<span class="st">"category"</span>]])</span>
-<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>table <span class="op">=</span> wandb.Table(data<span class="op">=</span>data, columns<span class="op">=</span>[<span class="st">"instruction"</span>, <span class="st">"context"</span>, <span class="st">"response"</span>, <span class="st">"category"</span>])</span>
-<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>run.log({<span class="st">"Dolly-100-samples"</span>: table})</span>
-<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>run.finish()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>data <span class="op">=</span> []</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> i <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">100</span>):  </span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    sample <span class="op">=</span> dataset[i]</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    data.append([sample[<span class="st">'instruction'</span>], sample[<span class="st">'context'</span>], sample[<span class="st">"response"</span>], sample[<span class="st">"category"</span>]])</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>table <span class="op">=</span> wandb.Table(data<span class="op">=</span>data, columns<span class="op">=</span>[<span class="st">"instruction"</span>, <span class="st">"context"</span>, <span class="st">"response"</span>, <span class="st">"category"</span>])</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>run.log({<span class="st">"Dolly-100-samples"</span>: table})</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>run.finish()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Instruction fine-tuning is a common technique used to fine-tune a base LLM for a specific downstream use-case.</p>
 <p>It will help us to format our prompts as follows:</p>
-<div class="sourceCode" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>Below <span class="kw">is</span> an instruction that describes a task. Write a response that appropriately completes the request.</span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a><span class="co">### Instruction:</span></span>
-<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>Sea <span class="kw">or</span> Mountain</span>
-<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a><span class="co">### Response:</span></span>
-<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>I believe Mountain are more attractive but Ocean has it<span class="st">'s own beauty and this tropical weather definitely turn you on! SO 50</span><span class="sc">% 50%</span></span>
-<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="er">### End</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>Below <span class="kw">is</span> an instruction that describes a task. Write a response that appropriately completes the request.</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a><span class="co">### Instruction:</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>Sea <span class="kw">or</span> Mountain</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="co">### Response:</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>I believe Mountain are more attractive but Ocean has it<span class="st">'s own beauty and this tropical weather definitely turn you on! SO 50</span><span class="sc">% 50%</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a><span class="er">### End</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>We need to write a function to format prompts on a per-sample basis (so that we can map it to our entire dataset).</p>
-<div class="cell" data-tags="[]" data-execution_count="52">
-<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> format_prompt(sample):</span>
-<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Given a sample dictionary, format the conversation into a prompt.</span></span>
-<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Args:</span></span>
-<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a><span class="co">      sample: A sample dictionary from a Hugging Face dataset.</span></span>
-<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
-<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a><span class="co">      sample: sample dictionary with "text" key for the formatted prompt.</span></span>
-<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
-<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>    INTRO_BLURB <span class="op">=</span> <span class="st">"Below is an instruction that describes a task. Write a response that appropriately completes the request."</span></span>
-<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>    INSTRUCTION_KEY <span class="op">=</span> <span class="st">"### Instruction:"</span></span>
-<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    INPUT_KEY <span class="op">=</span> <span class="st">"Input:"</span></span>
-<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    RESPONSE_KEY <span class="op">=</span> <span class="st">"### Response:"</span></span>
-<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    END_KEY <span class="op">=</span> <span class="st">"### End"</span></span>
-<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    blurb <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>INTRO_BLURB<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>    instruction <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>INSTRUCTION_KEY<span class="sc">}</span><span class="ch">\n</span><span class="sc">{</span>sample[<span class="st">'instruction'</span>]<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>    input_context <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>INPUT_KEY<span class="sc">}</span><span class="ch">\n</span><span class="sc">{</span>sample[<span class="st">'context'</span>]<span class="sc">}</span><span class="ss">"</span> <span class="cf">if</span> sample[<span class="st">"context"</span>] <span class="cf">else</span> <span class="va">None</span></span>
-<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    response <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>RESPONSE_KEY<span class="sc">}</span><span class="ch">\n</span><span class="sc">{</span>sample[<span class="st">'response'</span>]<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>    end <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>END_KEY<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>    parts <span class="op">=</span> [part <span class="cf">for</span> part <span class="kw">in</span> [blurb, instruction, input_context, response, end] <span class="cf">if</span> part]</span>
-<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>    formatted_prompt <span class="op">=</span> <span class="st">"</span><span class="ch">\n\n</span><span class="st">"</span>.join(parts)</span>
-<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>    sample[<span class="st">"text"</span>] <span class="op">=</span> formatted_prompt</span>
-<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sample</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> format_prompt(sample):</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Given a sample dictionary, format the conversation into a prompt.</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="co">    Args:</span></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="co">      sample: A sample dictionary from a Hugging Face dataset.</span></span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a><span class="co">    Returns:</span></span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a><span class="co">      sample: sample dictionary with "text" key for the formatted prompt.</span></span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>    INTRO_BLURB <span class="op">=</span> <span class="st">"Below is an instruction that describes a task. Write a response that appropriately completes the request."</span></span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>    INSTRUCTION_KEY <span class="op">=</span> <span class="st">"### Instruction:"</span></span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>    INPUT_KEY <span class="op">=</span> <span class="st">"Input:"</span></span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>    RESPONSE_KEY <span class="op">=</span> <span class="st">"### Response:"</span></span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    END_KEY <span class="op">=</span> <span class="st">"### End"</span></span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a>    blurb <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>INTRO_BLURB<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a>    instruction <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>INSTRUCTION_KEY<span class="sc">}</span><span class="ch">\n</span><span class="sc">{</span>sample[<span class="st">'instruction'</span>]<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    input_context <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>INPUT_KEY<span class="sc">}</span><span class="ch">\n</span><span class="sc">{</span>sample[<span class="st">'context'</span>]<span class="sc">}</span><span class="ss">"</span> <span class="cf">if</span> sample[<span class="st">"context"</span>] <span class="cf">else</span> <span class="va">None</span></span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    response <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>RESPONSE_KEY<span class="sc">}</span><span class="ch">\n</span><span class="sc">{</span>sample[<span class="st">'response'</span>]<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>    end <span class="op">=</span> <span class="ss">f"</span><span class="sc">{</span>END_KEY<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a>    parts <span class="op">=</span> [part <span class="cf">for</span> part <span class="kw">in</span> [blurb, instruction, input_context, response, end] <span class="cf">if</span> part]</span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>    formatted_prompt <span class="op">=</span> <span class="st">"</span><span class="ch">\n\n</span><span class="st">"</span>.join(parts)</span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>    sample[<span class="st">"text"</span>] <span class="op">=</span> formatted_prompt</span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> sample</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We will use our model tokenizer to process these prompts into tokenized ones.</p>
 <p>The goal is to create input sequences of uniform length (which are suitable for fine-tuning the language model because it maximizes efficiency and minimize computational overhead), that must not exceed the model’s maximum token limit.</p>
-<div class="cell" data-tags="[]" data-execution_count="28">
-<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_max_length(model):</span>
-<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    conf <span class="op">=</span> model.config</span>
-<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    max_length <span class="op">=</span> <span class="va">None</span></span>
-<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> length_setting <span class="kw">in</span> [<span class="st">"n_positions"</span>, <span class="st">"max_position_embeddings"</span>, <span class="st">"seq_length"</span>]:</span>
-<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>        max_length <span class="op">=</span> <span class="bu">getattr</span>(model.config, length_setting, <span class="va">None</span>)</span>
-<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> max_length:</span>
-<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f"Found max length: </span><span class="sc">{</span>max_length<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
-<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> max_length:</span>
-<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>        max_length <span class="op">=</span> <span class="dv">1024</span></span>
-<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Using default max length: </span><span class="sc">{</span>max_length<span class="sc">}</span><span class="ss">"</span>)</span>
-<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> max_length</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="15">
+<div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> get_max_length(model):</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>    conf <span class="op">=</span> model.config</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>    max_length <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> length_setting <span class="kw">in</span> [<span class="st">"n_positions"</span>, <span class="st">"max_position_embeddings"</span>, <span class="st">"seq_length"</span>]:</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>        max_length <span class="op">=</span> <span class="bu">getattr</span>(model.config, length_setting, <span class="va">None</span>)</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> max_length:</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>            <span class="bu">print</span>(<span class="ss">f"Found max length: </span><span class="sc">{</span>max_length<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> max_length:</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>        max_length <span class="op">=</span> <span class="dv">1024</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(<span class="ss">f"Using default max length: </span><span class="sc">{</span>max_length<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> max_length</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="45">
-<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> preprocess_batch(batch, tokenizer, max_length):</span>
-<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
-<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Tokenizing a batch</span></span>
-<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
-<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> tokenizer(</span>
-<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>        batch[<span class="st">"text"</span>],</span>
-<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>        max_length<span class="op">=</span>max_length,</span>
-<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>        truncation<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> preprocess_dataset(tokenizer: AutoTokenizer, max_length: <span class="bu">int</span>, seed: <span class="bu">int</span>, dataset: <span class="bu">str</span>):</span>
-<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Format &amp; tokenize it so it is ready for training</span></span>
-<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a><span class="co">    :param tokenizer (AutoTokenizer): Model Tokenizer</span></span>
-<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a><span class="co">    :param max_length (int): Maximum number of tokens to emit from tokenizer</span></span>
-<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
-<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Preprocessing dataset..."</span>)</span>
-<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>    dataset <span class="op">=</span> dataset.<span class="bu">map</span>(format_prompt)</span>
-<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>    _preprocessing_function <span class="op">=</span> partial(preprocess_batch, max_length<span class="op">=</span>max_length, tokenizer<span class="op">=</span>tokenizer)</span>
-<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>    dataset <span class="op">=</span> dataset.<span class="bu">map</span>(</span>
-<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>        _preprocessing_function,</span>
-<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>        batched<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>        remove_columns<span class="op">=</span>[<span class="st">"instruction"</span>, <span class="st">"context"</span>, <span class="st">"response"</span>, <span class="st">"text"</span>, <span class="st">"category"</span>],</span>
-<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>    )</span>
-<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>    dataset <span class="op">=</span> dataset.<span class="bu">filter</span>(<span class="kw">lambda</span> sample: <span class="bu">len</span>(sample[<span class="st">"input_ids"</span>]) <span class="op">&lt;</span> max_length)</span>
-<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>    </span>
-<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a>    dataset <span class="op">=</span> dataset.shuffle(seed<span class="op">=</span>seed)</span>
-<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb30-32"><a href="#cb30-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dataset</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="16">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> preprocess_batch(batch, tokenizer, max_length):</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="co">    Tokenizing a batch</span></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> tokenizer(</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>        batch[<span class="st">"text"</span>],</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>        max_length<span class="op">=</span>max_length,</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>        truncation<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> preprocess_dataset(tokenizer: AutoTokenizer, max_length: <span class="bu">int</span>, seed: <span class="bu">int</span>, dataset: <span class="bu">str</span>):</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>    <span class="co">"""Format &amp; tokenize it so it is ready for training</span></span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a><span class="co">    :param tokenizer (AutoTokenizer): Model Tokenizer</span></span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a><span class="co">    :param max_length (int): Maximum number of tokens to emit from tokenizer</span></span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a><span class="co">    """</span></span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(<span class="st">"Preprocessing dataset..."</span>)</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>    dataset <span class="op">=</span> dataset.<span class="bu">map</span>(format_prompt)</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>    _preprocessing_function <span class="op">=</span> partial(preprocess_batch, max_length<span class="op">=</span>max_length, tokenizer<span class="op">=</span>tokenizer)</span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>    dataset <span class="op">=</span> dataset.<span class="bu">map</span>(</span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>        _preprocessing_function,</span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>        batched<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>        remove_columns<span class="op">=</span>[<span class="st">"instruction"</span>, <span class="st">"context"</span>, <span class="st">"response"</span>, <span class="st">"text"</span>, <span class="st">"category"</span>],</span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>    dataset <span class="op">=</span> dataset.<span class="bu">filter</span>(<span class="kw">lambda</span> sample: <span class="bu">len</span>(sample[<span class="st">"input_ids"</span>]) <span class="op">&lt;</span> max_length)</span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>    dataset <span class="op">=</span> dataset.shuffle(seed<span class="op">=</span>seed)</span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> dataset</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="46">
-<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>max_length <span class="op">=</span> get_max_length(model)</span>
-<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> preprocess_dataset(tokenizer, max_length<span class="op">=</span>max_length, seed <span class="op">=</span> <span class="dv">42</span>, dataset<span class="op">=</span>dataset)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>max_length <span class="op">=</span> <span class="dv">10000</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> preprocess_dataset(tokenizer, max_length<span class="op">=</span>max_length, seed <span class="op">=</span> <span class="dv">42</span>, dataset<span class="op">=</span>dataset)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stdout">
-<pre><code>Found max length: 32768
-Preprocessing dataset...</code></pre>
+<pre><code>Preprocessing dataset...</code></pre>
 </div>
 <div class="cell-output cell-output-stderr">
-<pre><code>Map: 100%|██████████| 15011/15011 [00:01&lt;00:00, 9435.81 examples/s]
-Map: 100%|██████████| 15011/15011 [00:03&lt;00:00, 4045.09 examples/s]
-Filter: 100%|██████████| 15011/15011 [00:03&lt;00:00, 4226.45 examples/s]</code></pre>
+<pre><code>Map: 100%|██████████| 15011/15011 [00:01&lt;00:00, 9736.56 examples/s] 
+Map: 100%|██████████| 15011/15011 [00:03&lt;00:00, 4077.74 examples/s]
+Filter: 100%|██████████| 15011/15011 [00:03&lt;00:00, 4219.85 examples/s]</code></pre>
 </div>
 </div>
 </section>
@@ -641,46 +628,46 @@ Filter: 100%|██████████| 15011/15011 [00:03&lt;00:00, 4226.4
 <section id="training" class="level3">
 <h3 class="anchored" data-anchor-id="training">Training</h3>
 <p>Now we are ready for training!</p>
-<div class="cell" data-tags="[]" data-execution_count="48">
-<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>training_args <span class="op">=</span> TrainingArguments(</span>
-<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    output_dir<span class="op">=</span><span class="st">"outputs"</span>,</span>
-<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    per_device_train_batch_size<span class="op">=</span><span class="dv">1</span>,  </span>
-<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    gradient_accumulation_steps<span class="op">=</span><span class="dv">4</span>,  </span>
-<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    learning_rate<span class="op">=</span><span class="fl">2e-4</span>,</span>
-<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    max_grad_norm<span class="op">=</span><span class="fl">1.0</span>,</span>
-<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>    max_steps<span class="op">=</span><span class="dv">40</span>,</span>
-<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>    lr_scheduler_type<span class="op">=</span><span class="st">"linear"</span>,</span>
-<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>    warmup_steps<span class="op">=</span><span class="dv">5</span>,</span>
-<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>    fp16<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    logging_strategy<span class="op">=</span><span class="st">"steps"</span>,</span>
-<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>    logging_steps<span class="op">=</span><span class="dv">1</span>,</span>
-<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>    save_strategy<span class="op">=</span><span class="st">"steps"</span>,</span>
-<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>    save_steps<span class="op">=</span><span class="dv">10</span>,</span>
-<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>    optim<span class="op">=</span><span class="st">"paged_adamw_8bit"</span>,</span>
-<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    report_to<span class="op">=</span><span class="st">"wandb"</span></span>
-<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>training_args <span class="op">=</span> TrainingArguments(</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>    output_dir<span class="op">=</span><span class="st">"outputs"</span>,</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    per_device_train_batch_size<span class="op">=</span><span class="dv">1</span>,  </span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    gradient_accumulation_steps<span class="op">=</span><span class="dv">4</span>,  </span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>    learning_rate<span class="op">=</span><span class="fl">2e-4</span>,</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    max_grad_norm<span class="op">=</span><span class="fl">1.0</span>,</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    max_steps<span class="op">=</span><span class="dv">40</span>,</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    lr_scheduler_type<span class="op">=</span><span class="st">"linear"</span>,</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>    warmup_steps<span class="op">=</span><span class="dv">5</span>,</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>    fp16<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>    logging_strategy<span class="op">=</span><span class="st">"steps"</span>,</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>    logging_steps<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    save_strategy<span class="op">=</span><span class="st">"steps"</span>,</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>    save_steps<span class="op">=</span><span class="dv">10</span>,</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>    optim<span class="op">=</span><span class="st">"paged_adamw_8bit"</span>,</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>    report_to<span class="op">=</span><span class="st">"wandb"</span></span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>We first will initialize the wandb to customize our logging.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>run <span class="op">=</span> wandb.init(</span>
-<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    project<span class="op">=</span>wandb_project_name,</span>
-<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"train_run0"</span>,  <span class="co"># Sometimes I use the run name as short descriptor for the run.</span></span>
-<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    config<span class="op">=</span>{</span>
-<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"split"</span>: <span class="st">"train"</span>,</span>
-<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Optionally, you can add all hyperparameters and configs here for better reproducibility!</span></span>
-<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    },</span>
-<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    group<span class="op">=</span><span class="st">"train"</span>,</span>
-<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"train"</span>, <span class="st">"AdamW"</span>],  <span class="co"># Add tags for what might characterize this run.</span></span>
-<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    notes<span class="op">=</span><span class="st">"Initial finetuning."</span></span>
-<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>run <span class="op">=</span> wandb.init(</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    project<span class="op">=</span>wandb_project_name,</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"train_run0"</span>,  <span class="co"># Sometimes I use the run name as short descriptor for the run.</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    config<span class="op">=</span>{</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"split"</span>: <span class="st">"train"</span>,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>        <span class="co"># Optionally, you can add all hyperparameters and configs here for better reproducibility!</span></span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    group<span class="op">=</span><span class="st">"train"</span>,</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>    tags<span class="op">=</span>[<span class="st">"train"</span>, <span class="st">"AdamW"</span>],  <span class="co"># Add tags for what might characterize this run.</span></span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>    notes<span class="op">=</span><span class="st">"Initial finetuning."</span></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-<div class="cell" data-tags="[]" data-execution_count="50">
-<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> Trainer(</span>
-<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
-<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>training_args,</span>
-<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    data_collator<span class="op">=</span>DataCollatorForLanguageModeling(tokenizer, mlm<span class="op">=</span><span class="va">False</span>),</span>
-<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>    train_dataset<span class="op">=</span>dataset,</span>
-<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-tags="[]" data-execution_count="19">
+<div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>trainer <span class="op">=</span> Trainer(</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    model<span class="op">=</span>model,</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    args<span class="op">=</span>training_args,</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    data_collator<span class="op">=</span>DataCollatorForLanguageModeling(tokenizer, mlm<span class="op">=</span><span class="va">False</span>),</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    train_dataset<span class="op">=</span>dataset,</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 <p>Let’s take a quick look at our dataset and model before training:</p>
 <p>Dataset:</p>
@@ -731,20 +718,41 @@ Filter: 100%|██████████| 15011/15011 [00:03&lt;00:00, 4226.4
 <li>all other parameters left to default</li>
 <li>DataCollatorForLanguageModeling: Data collator used for language modeling. Inputs are dynamically padded to the maximum length of a batch if they are not all of the same length.</li>
 </ul>
-<div class="cell" data-tags="[]" data-execution_count="51">
-<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> trainer.train()  </span>
-<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>run.finish()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell" data-jupyter="{&quot;outputs_hidden&quot;:true}" data-tags="[]" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>results <span class="op">=</span> trainer.train()</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>run.finish()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <div class="cell-output cell-output-stderr">
-<pre><code>You're using a LlamaTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
+<pre><code>Failed to detect the name of this notebook, you can set it manually with the WANDB_NOTEBOOK_NAME environment variable to enable code saving.
+wandb: Currently logged in as: uthnaht. Use `wandb login --relogin` to force relogin
+You're using a LlamaTokenizerFast tokenizer. Please note that with a fast tokenizer, using the `__call__` method is faster than using a method to encode the text followed by a call to the `pad` method to get a padded encoding.
 /home/ec2-user/SageMaker/kaggle/llm-detect-generated-text/.venv/lib/python3.11/site-packages/torch/utils/checkpoint.py:429: UserWarning: torch.utils.checkpoint: please pass in use_reentrant=True or use_reentrant=False explicitly. The default value of use_reentrant will be updated to be False in the future. To maintain current behavior, pass use_reentrant=True. It is recommended that you use use_reentrant=False. Refer to docs for more details on the differences between the two variants.
-  warnings.warn(</code></pre>
+  warnings.warn(
+wandb: ERROR Error while calling W&amp;B API: An internal error occurred. Please contact support. (&lt;Response [500]&gt;)
+wandb: ERROR Error while calling W&amp;B API: An internal error occurred. Please contact support. (&lt;Response [500]&gt;)
+wandb: ERROR Error while calling W&amp;B API: An internal error occurred. Please contact support. (&lt;Response [500]&gt;)
+wandb: ERROR Error while calling W&amp;B API: An internal error occurred. Please contact support. (&lt;Response [500]&gt;)</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+Tracking run with wandb version 0.16.0
+</div>
+<div class="cell-output cell-output-display">
+Run data is saved locally in <code>/home/ec2-user/SageMaker/perso/mrtunguyen.github.io/posts/finetuning-llm/wandb/run-20231128_224704-nmv9cswr</code>
+</div>
+<div class="cell-output cell-output-display">
+Syncing run <strong><a href="https://wandb.ai/uthnaht/huggingface/runs/nmv9cswr" target="_blank">eternal-fire-7</a></strong> to <a href="https://wandb.ai/uthnaht/huggingface" target="_blank">Weights &amp; Biases</a> (<a href="https://wandb.me/run" target="_blank">docs</a>)<br>
+</div>
+<div class="cell-output cell-output-display">
+ View project at <a href="https://wandb.ai/uthnaht/huggingface" target="_blank">https://wandb.ai/uthnaht/huggingface</a>
+</div>
+<div class="cell-output cell-output-display">
+ View run at <a href="https://wandb.ai/uthnaht/huggingface/runs/nmv9cswr" target="_blank">https://wandb.ai/uthnaht/huggingface/runs/nmv9cswr</a>
 </div>
 <div class="cell-output cell-output-display">
 
     <div>
       
       <progress value="8" max="40" style="width:300px; height:20px; vertical-align: middle;"></progress>
-      [ 8/40 00:18 &lt; 01:38, 0.32 it/s, Epoch 0.00/1]
+      [ 8/40 00:18 &lt; 01:39, 0.32 it/s, Epoch 0.00/1]
     </div>
     
 <table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
@@ -765,19 +773,19 @@ Filter: 100%|██████████| 15011/15011 [00:03&lt;00:00, 4226.4
 </tr>
 <tr class="odd">
 <td>3</td>
-<td>2.210800</td>
+<td>2.209000</td>
 </tr>
 <tr class="even">
 <td>4</td>
-<td>2.172900</td>
+<td>2.168400</td>
 </tr>
 <tr class="odd">
 <td>5</td>
-<td>1.797000</td>
+<td>1.795700</td>
 </tr>
 <tr class="even">
 <td>6</td>
-<td>1.471600</td>
+<td>1.739000</td>
 </tr>
 </tbody>
 </table>
@@ -786,6 +794,48 @@ Filter: 100%|██████████| 15011/15011 [00:03&lt;00:00, 4226.4
 <div class="cell-output cell-output-error">
 <pre><code>OutOfMemoryError: CUDA out of memory. Tried to allocate 1.83 GiB. GPU 0 has a total capacty of 15.77 GiB of which 1.52 GiB is free. Including non-PyTorch memory, this process has 14.21 GiB memory in use. Of the allocated memory 11.42 GiB is allocated by PyTorch, and 2.41 GiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting max_split_size_mb to avoid fragmentation.  See documentation for Memory Management and PYTORCH_CUDA_ALLOC_CONF</code></pre>
 </div>
+</div>
+<p>Unfortunately, it is possible that the latest weights are not the best. To solve this problem, you can implement a EarlyStoppingCallback, from transformers, during your finetuning. This will enable you to regularly test your model on the validation set, if you have one, and keep only the best weights.</p>
+<section id="merge-weights" class="level4">
+<h4 class="anchored" data-anchor-id="merge-weights">Merge weights</h4>
+<p>After obtaining the refined weights, we can construct our fine-tuned model and store it in a fresh directory along with its corresponding tokenizer. This process results in a fine-tuned model and tokenizer that are memory-efficient and prepared for inference!</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> AutoPeftModelForCausalLM.from_pretrained(output_dir, device_map<span class="op">=</span><span class="st">"auto"</span>, torch_dtype<span class="op">=</span>torch.bfloat16)</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> model.merge_and_unload()</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>output_merged_dir <span class="op">=</span> <span class="st">"results/zypher7b/final_merged_checkpoint"</span></span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>os.makedirs(output_merged_dir, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>model.save_pretrained(output_merged_dir, safe_serialization<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>tokenizer <span class="op">=</span> AutoTokenizer.from_pretrained(model_name)</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>tokenizer.save_pretrained(output_merged_dir)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+</section>
+</section>
+<section id="inference" class="level3">
+<h3 class="anchored" data-anchor-id="inference">Inference</h3>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>model_name <span class="op">=</span> <span class="st">"local-fil-path"</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a>tokenizer <span class="op">=</span> AutoTokenizer.from_pretrained(model_name)</span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>tokenizer.pad_token <span class="op">=</span> tokenizer.eos_token</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a>bnb_config <span class="op">=</span> BitsAndBytesConfig(</span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a>    load_in_4bit<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a>    bnb_4bit_use_double_quant<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a>    bnb_4bit_quant_type<span class="op">=</span><span class="st">"nf4"</span>,</span>
+<span id="cb39-12"><a href="#cb39-12" aria-hidden="true" tabindex="-1"></a>    bnb_4bit_compute_dtype<span class="op">=</span>torch.bfloat16,</span>
+<span id="cb39-13"><a href="#cb39-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb39-14"><a href="#cb39-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-15"><a href="#cb39-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-16"><a href="#cb39-16" aria-hidden="true" tabindex="-1"></a><span class="co"># You can just use model.</span></span>
+<span id="cb39-17"><a href="#cb39-17" aria-hidden="true" tabindex="-1"></a>inf_model <span class="op">=</span> AutoModelForCausalLM.from_pretrained(</span>
+<span id="cb39-18"><a href="#cb39-18" aria-hidden="true" tabindex="-1"></a>    model_name,</span>
+<span id="cb39-19"><a href="#cb39-19" aria-hidden="true" tabindex="-1"></a>    quantization_config<span class="op">=</span>bnb_config,</span>
+<span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>    device_map<span class="op">=</span><span class="st">"auto"</span>,</span>
+<span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
 
 
