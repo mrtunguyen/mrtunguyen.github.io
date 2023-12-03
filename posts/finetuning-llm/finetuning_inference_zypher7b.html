@@ -7,7 +7,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
 
 <meta name="dcterms.date" content="2023-11-23">
-<meta name="description" content="Finetuning and inference Zypher7B">
+<meta name="description" content="Finetune and inference Zypher7B">
 
 <title>ML Blog - Finetuning and inference Zypher7B</title>
 <style>
@@ -150,7 +150,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
       <h1 class="title">Finetuning and inference Zypher7B</h1>
                   <div>
         <div class="description">
-          Finetuning and inference Zypher7B
+          Finetune and inference Zypher7B
         </div>
       </div>
                           <div class="quarto-categories">
@@ -193,8 +193,8 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <ul class="collapse">
   <li><a href="#training-dataset" id="toc-training-dataset" class="nav-link" data-scroll-target="#training-dataset">Training Dataset</a></li>
   <li><a href="#training" id="toc-training" class="nav-link" data-scroll-target="#training">Training</a></li>
-  <li><a href="#inference" id="toc-inference" class="nav-link" data-scroll-target="#inference">Inference</a></li>
   </ul></li>
+  <li><a href="#inference" id="toc-inference" class="nav-link" data-scroll-target="#inference">Inference</a></li>
   <li><a href="#reference" id="toc-reference" class="nav-link" data-scroll-target="#reference">Reference</a></li>
   </ul>
 </nav>
@@ -813,8 +813,9 @@ Syncing run <strong><a href="https://wandb.ai/uthnaht/huggingface/runs/nmv9cswr"
 </div>
 </section>
 </section>
-<section id="inference" class="level3">
-<h3 class="anchored" data-anchor-id="inference">Inference</h3>
+</section>
+<section id="inference" class="level2">
+<h2 class="anchored" data-anchor-id="inference">Inference</h2>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>model_name <span class="op">=</span> <span class="st">"local-fil-path"</span></span>
 <span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
@@ -838,7 +839,6 @@ Syncing run <strong><a href="https://wandb.ai/uthnaht/huggingface/runs/nmv9cswr"
 <span id="cb39-20"><a href="#cb39-20" aria-hidden="true" tabindex="-1"></a>    device_map<span class="op">=</span><span class="st">"auto"</span>,</span>
 <span id="cb39-21"><a href="#cb39-21" aria-hidden="true" tabindex="-1"></a>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
-</section>
 </section>
 <section id="reference" class="level2">
 <h2 class="anchored" data-anchor-id="reference">Reference</h2>
