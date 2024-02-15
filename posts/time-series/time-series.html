@@ -213,13 +213,13 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
+<main class="content quarto-banner-title-block" id="quarto-document-content">
 
 
 
 
 <p>Time series exist in a variety of fields from meteorology to finance, econometrics, and marketing. By recording data and analyzing it, we can study time series to analyze industrial processes or track business metrics, such as sales or engagement. Also, with large amounts of data available, data scientists can apply their expertise to techniques for time series forecasting.</p>
-<p>You will first learn how to make simple forecasts that will serve as benchmarks for more complex models. Then we will use two statistical learning techniques, the moving average model and the autoregressive model, to make forecasts. These will serve as the foundation for the more complex modeling techniques we will cover that will allow us to account for non-stationarity, seasonality effects, and the impact of exogenous variables. Afterwards, we’ll switch from statistical learning techniques to deep learning meth- ods, in order to forecast very large time series with a high dimensionality, a sce- nario in which statistical learning often does not perform as well as its deep learning counterpart.</p>
+<p>We will first learn how to make simple forecasts that will serve as benchmarks for more complex models. Then we will use two statistical learning techniques, the moving average model and the autoregressive model, to make forecasts. These will serve as the foundation for the more complex modeling techniques we will cover that will allow us to account for non-stationarity, seasonality effects, and the impact of exogenous variables. Afterwards, we’ll switch from statistical learning techniques to deep learning methods, in order to forecast very large time series with a high dimensionality, a sce- nario in which statistical learning often does not perform as well as its deep learning counterpart.</p>
 <section id="time-series-definition" class="level2">
 <h2 class="anchored" data-anchor-id="time-series-definition">Time Series Definition</h2>
 <p>A time series is a set of data points ordered in time. The data is equally spaced in time, meaning that it was recorded at every hour, min- ute, month, or quarter. Typical examples of time series include the closing value of a stock, a household’s electricity consumption, or the temperature outside.</p>
@@ -237,7 +237,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </ol>
 </section>
 </section>
-<section id="the-random-walk-process" class="level2 page-columns page-full">
+<section id="the-random-walk-process" class="level2">
 <h2 class="anchored" data-anchor-id="the-random-walk-process">The random walk process</h2>
 <p>A random walk is a process in which there is an equal chance of going up or down by a random number. Random walks often expose long periods where a positive or negative trend can be observed. They are also often accompanied by sudden changes in direction.</p>
 <p>This is usually observed in financial and economic data, like the daily closing price of GOOGL.</p>
@@ -245,10 +245,10 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <p><span class="math display">\[y_t = C + y_{t-1} + ε_t\]</span></p>
 <p>How to indentify a random walk process?</p>
 <p>A random walk is a series whose first difference is stationary and uncorrelated. This means that the process moves completely at random.</p>
-<aside>
-<p>💡 Stationarity</p>
-<p>A stationary process is one whose statistical properties do not change over time. It means that it is said to be stationary if its mean, variance, and autocorrelation do not change over time.</p>
-</aside>
+<blockquote class="blockquote">
+<p>Stationarity:<br>
+A stationary process is one whose statistical properties do not change over time. It means that it is said to be stationary if its mean, variance, and autocorrelation do not change over time.</p>
+</blockquote>
 <section id="how-to-test-for-stionarity" class="level3">
 <h3 class="anchored" data-anchor-id="how-to-test-for-stionarity">How to test for stionarity</h3>
 <p>💡 Augmented Dickey-Fuller (ADF) test</p>
