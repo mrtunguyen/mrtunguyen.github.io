@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.3.450">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="dcterms.date" content="2023-12-07">
+<meta name="description" content="Time Series Forecasting">
+
+<title>ML Blog - Time Series Forecasting with Machine Learning</title>
+<style>
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: min(4vw, 1.5em);}
+div.column{flex: auto; overflow-x: auto;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../../">
+<script src="../../site_libs/quarto-html/quarto.js"></script>
+<script src="../../site_libs/quarto-html/popper.min.js"></script>
+<script src="../../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../../site_libs/quarto-html/quarto-syntax-highlighting.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../../site_libs/bootstrap/bootstrap.min.css" rel="stylesheet" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "navbar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "end",
+  "type": "overlay",
+  "limit": 20,
+  "language": {
+    "search-no-results-text": "No results",
+    "search-matching-documents-text": "matching documents",
+    "search-copy-link-title": "Copy link to search",
+    "search-hide-matches-text": "Hide additional matches",
+    "search-more-match-text": "more match in this document",
+    "search-more-matches-text": "more matches in this document",
+    "search-clear-button-title": "Clear",
+    "search-detached-cancel-button-title": "Cancel",
+    "search-submit-button-title": "Submit",
+    "search-label": "Search"
+  }
+}</script>
+
+  <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+  <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<link rel="stylesheet" href="../../styles.css">
+</head>
+
+<body class="nav-fixed">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+    <nav class="navbar navbar-expand-lg navbar-dark ">
+      <div class="navbar-container container-fluid">
+      <div class="navbar-brand-container">
+    <a class="navbar-brand" href="../../index.html">
+    <span class="navbar-title">ML Blog</span>
+    </a>
+  </div>
+            <div id="quarto-search" class="" title="Search"></div>
+          <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarCollapse" aria-controls="navbarCollapse" aria-expanded="false" aria-label="Toggle navigation" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+  <span class="navbar-toggler-icon"></span>
+</button>
+          <div class="collapse navbar-collapse" id="navbarCollapse">
+            <ul class="navbar-nav navbar-nav-scroll ms-auto">
+  <li class="nav-item">
+    <a class="nav-link" href="../../about.html" rel="" target="">
+ <span class="menu-text">About me</span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://github.com/mrtunguyen" rel="" target=""><i class="bi bi-github" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+  <li class="nav-item compact">
+    <a class="nav-link" href="https://twitter.com/jonathan_ttu" rel="" target=""><i class="bi bi-twitter" role="img">
+</i> 
+ <span class="menu-text"></span></a>
+  </li>  
+</ul>
+            <div class="quarto-navbar-tools">
+</div>
+          </div> <!-- /navcollapse -->
+      </div> <!-- /container-fluid -->
+    </nav>
+</header>
+<!-- content -->
+<header id="title-block-header" class="quarto-title-block default page-columns page-full">
+  <div class="quarto-title-banner page-columns page-full">
+    <div class="quarto-title column-body">
+      <h1 class="title">Time Series Forecasting with Machine Learning</h1>
+                  <div>
+        <div class="description">
+          Time Series Forecasting
+        </div>
+      </div>
+                          <div class="quarto-categories">
+                <div class="quarto-category">time-series</div>
+              </div>
+                  </div>
+  </div>
+    
+  
+  <div class="quarto-title-meta">
+
+      
+      <div>
+      <div class="quarto-title-meta-heading">Published</div>
+      <div class="quarto-title-meta-contents">
+        <p class="date">December 7, 2023</p>
+      </div>
+    </div>
+    
+      
+    </div>
+    
+  
+  </header><div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article page-navbar">
+<!-- sidebar -->
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">On this page</h2>
+   
+  <ul>
+  <li><a href="#time-series-definition" id="toc-time-series-definition" class="nav-link active" data-scroll-target="#time-series-definition">Time Series Definition</a>
+  <ul class="collapse">
+  <li><a href="#what-makes-time-series-forecasting-different-from-other-regression-tasks" id="toc-what-makes-time-series-forecasting-different-from-other-regression-tasks" class="nav-link" data-scroll-target="#what-makes-time-series-forecasting-different-from-other-regression-tasks">What makes time series forecasting different from other regression tasks?</a></li>
+  </ul></li>
+  <li><a href="#the-random-walk-process" id="toc-the-random-walk-process" class="nav-link" data-scroll-target="#the-random-walk-process">The random walk process</a>
+  <ul class="collapse">
+  <li><a href="#how-to-test-for-stionarity" id="toc-how-to-test-for-stionarity" class="nav-link" data-scroll-target="#how-to-test-for-stionarity">How to test for stionarity</a></li>
+  <li><a href="#time-series-decomposition" id="toc-time-series-decomposition" class="nav-link" data-scroll-target="#time-series-decomposition">Time series decomposition</a></li>
+  </ul></li>
+  <li><a href="#statistical-models" id="toc-statistical-models" class="nav-link" data-scroll-target="#statistical-models">Statistical Models</a>
+  <ul class="collapse">
+  <li><a href="#moving-average" id="toc-moving-average" class="nav-link" data-scroll-target="#moving-average">Moving average</a></li>
+  <li><a href="#autoregressive-process" id="toc-autoregressive-process" class="nav-link" data-scroll-target="#autoregressive-process">Autoregressive Process</a></li>
+  <li><a href="#autoregressive-moving-average-arma-process" id="toc-autoregressive-moving-average-arma-process" class="nav-link" data-scroll-target="#autoregressive-moving-average-arma-process">Autoregressive Moving Average (ARMA) Process</a></li>
+  <li><a href="#autoregressive-integrated-moving-average-arima-process" id="toc-autoregressive-integrated-moving-average-arima-process" class="nav-link" data-scroll-target="#autoregressive-integrated-moving-average-arima-process">Autoregressive Integrated Moving Average (ARIMA) Process</a></li>
+  <li><a href="#seasonal-autoregressive-integrated-moving-average-sarima-process" id="toc-seasonal-autoregressive-integrated-moving-average-sarima-process" class="nav-link" data-scroll-target="#seasonal-autoregressive-integrated-moving-average-sarima-process">Seasonal Autoregressive Integrated Moving Average (SARIMA) Process</a></li>
+  <li><a href="#sarima-with-external-variables-sarimax" id="toc-sarima-with-external-variables-sarimax" class="nav-link" data-scroll-target="#sarima-with-external-variables-sarimax">SARIMA with external variables (SARIMAX)</a></li>
+  <li><a href="#vector-autoregression-var-model" id="toc-vector-autoregression-var-model" class="nav-link" data-scroll-target="#vector-autoregression-var-model">Vector AutoRegression (VAR) model</a></li>
+  <li><a href="#prophet" id="toc-prophet" class="nav-link" data-scroll-target="#prophet">Prophet</a></li>
+  </ul></li>
+  <li><a href="#deep-learning" id="toc-deep-learning" class="nav-link" data-scroll-target="#deep-learning">Deep learning</a>
+  <ul class="collapse">
+  <li><a href="#multilayer-perceptron-mlp" id="toc-multilayer-perceptron-mlp" class="nav-link" data-scroll-target="#multilayer-perceptron-mlp">Multilayer Perceptron (MLP)</a></li>
+  <li><a href="#recurrent-neural-network-rnn" id="toc-recurrent-neural-network-rnn" class="nav-link" data-scroll-target="#recurrent-neural-network-rnn">Recurrent Neural Network (RNN)</a></li>
+  <li><a href="#convolutional-neural-network-cnn" id="toc-convolutional-neural-network-cnn" class="nav-link" data-scroll-target="#convolutional-neural-network-cnn">Convolutional Neural Network (CNN)</a></li>
+  <li><a href="#temporal-convolutional-network-tcn" id="toc-temporal-convolutional-network-tcn" class="nav-link" data-scroll-target="#temporal-convolutional-network-tcn">Temporal Convolutional Network (TCN)</a></li>
+  <li><a href="#transformer" id="toc-transformer" class="nav-link" data-scroll-target="#transformer">Transformer</a></li>
+  <li><a href="#neuralprophet" id="toc-neuralprophet" class="nav-link" data-scroll-target="#neuralprophet">NeuralProphet</a></li>
+  </ul></li>
+  <li><a href="#reference" id="toc-reference" class="nav-link" data-scroll-target="#reference">Reference</a></li>
+  </ul>
+</nav>
+    </div>
+<!-- main -->
+<main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
+
+
+
+
+<p>Time series exist in a variety of fields from meteorology to finance, econometrics, and marketing. By recording data and analyzing it, we can study time series to analyze industrial processes or track business metrics, such as sales or engagement. Also, with large amounts of data available, data scientists can apply their expertise to techniques for time series forecasting.</p>
+<p>You will first learn how to make simple forecasts that will serve as benchmarks for more complex models. Then we will use two statistical learning techniques, the moving average model and the autoregressive model, to make forecasts. These will serve as the foundation for the more complex modeling techniques we will cover that will allow us to account for non-stationarity, seasonality effects, and the impact of exogenous variables. Afterwards, we’ll switch from statistical learning techniques to deep learning meth- ods, in order to forecast very large time series with a high dimensionality, a sce- nario in which statistical learning often does not perform as well as its deep learning counterpart.</p>
+<section id="time-series-definition" class="level2">
+<h2 class="anchored" data-anchor-id="time-series-definition">Time Series Definition</h2>
+<p>A time series is a set of data points ordered in time. The data is equally spaced in time, meaning that it was recorded at every hour, min- ute, month, or quarter. Typical examples of time series include the closing value of a stock, a household’s electricity consumption, or the temperature outside.</p>
+<section id="what-makes-time-series-forecasting-different-from-other-regression-tasks" class="level3">
+<h3 class="anchored" data-anchor-id="what-makes-time-series-forecasting-different-from-other-regression-tasks">What makes time series forecasting different from other regression tasks?</h3>
+<ol type="1">
+<li><strong>Temporal ordering</strong>: Time series have an order and the order of the observations matters. You can’t just treat the data as independent and identically distributed (i.i.d.) because the temporal ordering of the data matters.</li>
+<li>Time series sometimes do not have features: With time series, it is quite common to be given a simple dataset with a time column and a value at that point in time. Without any other features, we must learn ways of using past values of the time series to forecast future values.</li>
+<li>Speciality of time series forecasting:
+<ul>
+<li><strong>Seasonality</strong>: Many time series exhibit seasonality. For example, the number of airline passengers increases during the summer and decreases during the winter.</li>
+<li><strong>Trends</strong>: Many time series exhibit trends. For example, the number of airline passengers has generally increased over time.</li>
+<li><strong>Non-stationarity</strong>: Many time series are non-stationary. This means that the statistical properties of the time series, such as the mean or variance, change over time. For example, the number of airline passengers has generally increased over time, so the mean number of passengers is not constant.</li>
+</ul></li>
+</ol>
+</section>
+</section>
+<section id="the-random-walk-process" class="level2 page-columns page-full">
+<h2 class="anchored" data-anchor-id="the-random-walk-process">The random walk process</h2>
+<p>A random walk is a process in which there is an equal chance of going up or down by a random number. Random walks often expose long periods where a positive or negative trend can be observed. They are also often accompanied by sudden changes in direction.</p>
+<p>This is usually observed in financial and economic data, like the daily closing price of GOOGL.</p>
+<p>In a random walk process, we say that the present value <span class="math inline">\(y_t\)</span> is a function of the value at the previous timestep <span class="math inline">\(y_{t –1}\)</span>, a constant C, and a random number <span class="math inline">\(ε_t\)</span> , also termed white noise. Here, <span class="math inline">\(ε_t\)</span> is the realization of the standard normal distribution, which has a variance of 1 and a mean of 0. Therefore, we can write the random walk process as:</p>
+<p><span class="math display">\[y_t = C + y_{t-1} + ε_t\]</span></p>
+<p>How to indentify a random walk process?</p>
+<p>A random walk is a series whose first difference is stationary and uncorrelated. This means that the process moves completely at random.</p>
+<aside>
+<p>💡 Stationarity</p>
+<p>A stationary process is one whose statistical properties do not change over time. It means that it is said to be stationary if its mean, variance, and autocorrelation do not change over time.</p>
+</aside>
+<section id="how-to-test-for-stionarity" class="level3">
+<h3 class="anchored" data-anchor-id="how-to-test-for-stionarity">How to test for stionarity</h3>
+<p>💡 Augmented Dickey-Fuller (ADF) test</p>
+<p>The augmented Dickey-Fuller (ADF) test helps us determine if a time series is stationary by testing for the presence of a unit root. If a unit root is present, the time series is not stationary.</p>
+<p>The null hypothesis states that a unit root is present, meaning that our time series is not stationary.</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.stattools <span class="im">import</span> adfuller</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.graphics.tsaplots <span class="im">import</span> plot_acf</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a>steps <span class="op">=</span> np.random.standard_normal(<span class="dv">1000</span>)</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a>steps[<span class="dv">0</span>]<span class="op">=</span><span class="dv">0</span></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a>random_walk <span class="op">=</span> np.cumsum(steps)</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a>ax.plot(random_walk)</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Timesteps'</span>)</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Value'</span>)</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a>ad_fuller_result <span class="op">=</span> adfuller(random_walk) <span class="co"># test for stationary</span></span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'ADF Statistic: </span><span class="sc">{</span>ad_fuller_result[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'p-value: </span><span class="sc">{</span>ad_fuller_result[<span class="dv">1</span>]<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ADF Statistic: -1.0137668210808588
+p-value: 0.7482101114173918</code></pre>
+</div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-2-output-2.png" class="img-fluid"></p>
+</div>
+</div>
+<p>The ADF statistic is not a large negative number, and with a p-value greater than 0.05, we cannot reject the null hypothesis stating that our time series is not stationary. We can further support our conclusion by plotting the ACF function.</p>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>plot_acf(random_walk, lags<span class="op">=</span><span class="dv">20</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-3-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>The autocorrelation coefficients slowly decrease as the lag increases, which is a clear indicator that our random walk is not a stationary process. The shaded area represents a confidence interval. If a point is within the shaded area, then it is not significantly different from 0. Otherwise, the autocor- relation coefficient is significant.</p>
+<p>Because our random walk is not stationary, we need to apply a transformation to make it stationary in order to retrieve useful information from the ACF plot. Since our sequence mostly displays changes in the trend without seasonal patterns, we will apply a first-order differencing to our time series.</p>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>diff_random_walk <span class="op">=</span> np.diff(random_walk, n<span class="op">=</span><span class="dv">1</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="11">
+<div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>ADF_result <span class="op">=</span> adfuller(diff_random_walk)</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'ADF Statistic: </span><span class="sc">{</span>ADF_result[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'p-value: </span><span class="sc">{</span>ADF_result[<span class="dv">1</span>]<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ADF Statistic: -15.250889678624036
+p-value: 5.01119615882467e-28</code></pre>
+</div>
+</div>
+<p>This time the ADF statistic is a large negative number, and the p-value is less than 0.05. Therefore, we reject the null hypothesis, and we can say that this process has no unit root and is thus stationary.</p>
+<div class="cell" data-execution_count="12">
+<div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>plot_acf(diff_random_walk, lags<span class="op">=</span><span class="dv">20</span>)<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-6-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>You’ll notice that there are no significant autocorrelation coefficients after lag 0. This means that the stationary process is completely random and can therefore be described as white noise. Each value is simply a random step away from the previous one, with no relation between them.</p>
+</section>
+<section id="time-series-decomposition" class="level3">
+<h3 class="anchored" data-anchor-id="time-series-decomposition">Time series decomposition</h3>
+<p><em>Time series decomposition</em> is a statistical task that separates the time series into its three main components: a trend component, a seasonal component, and the residuals.</p>
+<ul>
+<li>The trend component represents the long-term change in the time series. This component is responsible for time series that increase or decrease over time.</li>
+<li>The seasonal component is the periodic pattern in the time series. It represents repeated fluctuations that occur over a fixed period of time.</li>
+<li>Finally, the residuals, or the noise, express any irregularity that cannot be explained by the trend or the seasonal component.</li>
+</ul>
+<p>We will take a look at real world dataset. The Airline Passengers dataset describes the total number of airline passengers over a period of time. The units are a count of the number of airline passengers in thousands. There are 144 monthly observations from 1949 to 1960.</p>
+<div class="cell" data-execution_count="14">
+<div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.seasonal <span class="im">import</span> STL</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">'https://raw.githubusercontent.com/jbrownlee/Datasets/master/airline-passengers.csv'</span>, header<span class="op">=</span><span class="dv">0</span>, index_col<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>decomposition <span class="op">=</span> STL(df[<span class="st">'Passengers'</span>], period<span class="op">=</span><span class="dv">12</span>).fit()</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2, ax3, ax4) <span class="op">=</span> plt.subplots(nrows<span class="op">=</span><span class="dv">4</span>, ncols<span class="op">=</span><span class="dv">1</span>, sharex<span class="op">=</span><span class="va">True</span>, figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">8</span>))</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>ax1.plot(decomposition.observed)</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>ax1.set_ylabel(<span class="st">'Observed'</span>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>ax2.plot(decomposition.trend)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>ax2.set_ylabel(<span class="st">'Trend'</span>)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a>ax3.plot(decomposition.seasonal)</span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>ax3.set_ylabel(<span class="st">'Seasonal'</span>)</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>ax4.plot(decomposition.resid)</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>ax4.set_ylabel(<span class="st">'Residuals'</span>)</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>plt.xticks(np.arange(<span class="dv">0</span>, <span class="dv">145</span>, <span class="dv">12</span>), np.arange(<span class="dv">1949</span>, <span class="dv">1962</span>, <span class="dv">1</span>))</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>fig.autofmt_xdate()</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-7-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+</section>
+<section id="statistical-models" class="level2">
+<h2 class="anchored" data-anchor-id="statistical-models">Statistical Models</h2>
+<section id="moving-average" class="level3">
+<h3 class="anchored" data-anchor-id="moving-average">Moving average</h3>
+<p>A moving average process, or the moving average (MA) model, states that the current value is linearly dependent on the current and past error terms. The error terms are assumed to be mutually independent and normally distributed, just like white noise.</p>
+<p>A moving average model is denoted as <span class="math inline">\(MA(q)\)</span>, where <span class="math inline">\(q\)</span> is the order. The model expresses the present value as a linear combination of the mean of the series <span class="math inline">\(\mu\)</span>, the present error term <span class="math inline">\(\epsilon_t\)</span>, and past error terms <span class="math inline">\(\epsilon_t - q\)</span>. The magnitude of the impact of past errors on the present value is quantified using a coefficient denoted as <span class="math inline">\(\theta_q\)</span>.</p>
+<p><span class="math display">\[y_t = \mu + \epsilon_t + \theta_1 \epsilon_{t-1} + \theta_2 \epsilon_{t-2} + ... + \theta_q \epsilon_{t-q}\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="moving_average.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">moving average</figcaption>
+</figure>
+</div>
+</section>
+<section id="autoregressive-process" class="level3">
+<h3 class="anchored" data-anchor-id="autoregressive-process">Autoregressive Process</h3>
+<p>An autoregressive process establishes that the output variable depends linearly on its own previous values. In other words, it is a regression of the variable against itself.</p>
+<p>An autoregressive process is denoted as an <span class="math inline">\(AR(p)\)</span> process, where p is the order. In such a process, the present value <span class="math inline">\(y_t\)</span> is a linear combination of a constant <span class="math inline">\(C\)</span>, the present error term <span class="math inline">\(\epsilon_t\)</span>, which is also white noise, and the past values of the series <span class="math inline">\(y_t–p\)</span>. The magnitude of the influence of the past values on the present value is denoted as <span class="math inline">\(\phi_p\)</span>, which represents the coefficients of the <span class="math inline">\(AR(p)\)</span> model.</p>
+<p><span class="math display">\[y_t = C + \phi_1 y_{t-1} + \phi_2 y_{t-2} + ... + \phi_p y_{t-p} + \epsilon_t\]</span></p>
+<p>Similar to the moving average process, the order <span class="math inline">\(p\)</span> of an autoregressive process determines the number of past values that affect the present value</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="autoregressive.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">Autoregressive</figcaption>
+</figure>
+</div>
+</section>
+<section id="autoregressive-moving-average-arma-process" class="level3">
+<h3 class="anchored" data-anchor-id="autoregressive-moving-average-arma-process">Autoregressive Moving Average (ARMA) Process</h3>
+<p>The autoregressive moving average process is a combination of the autoregressive process and the moving average process. It states that the present value is linearly dependent on its own previous values and a constant, just like in an autoregressive process, as well as on the mean of the series, the current error term, and past error terms, like in a moving average process.</p>
+<p>The <span class="math inline">\(\text{ARMA(p, q)}\)</span> model consists of two types of lagged values, one for the autoregressive component and the other for the moving average component. The first parameter <span class="math inline">\(p\)</span> indicate the order of the autoregression, and the second <span class="math inline">\(q\)</span> the order of the moving average</p>
+<p><span class="math display">\[y_t = C + \phi_1 y_{t-1} + \phi_2 y_{t-2} + ... + \phi_p y_{t-p} + \epsilon_t + \theta_1 \epsilon_{t-1} + \theta_2 \epsilon_{t-2} + ... + \theta_q \epsilon_{t-q}\]</span></p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="ARMA.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">ARMA</figcaption>
+</figure>
+</div>
+<p><strong>Understanding the Akaike information criterion (AIC)</strong></p>
+<p>The AIC estimates the quality of a model relative to other models. Given that there will be some information lost when a model is fitted to the data, the AIC quantifies the relative amount of information lost by the model. The less information lost, the lower the AIC value and the better the model. The AIC is calculated as follows:</p>
+<p><span class="math display">\[AIC = 2k - 2ln(\hat{L})\]</span></p>
+<p>where k is the number of parameters in the model and <span class="math inline">\(\hat{L}\)</span> is the maximum value of the likelihood function for the model.</p>
+<p><strong>Understanding residual analysis</strong></p>
+<p>Residual analysis is a statistical technique used to assess the quality of a model. It is used to determine whether the assumptions of the model are valid and to identify any patterns in the residuals. The residuals are the differences between the observed values and the predicted values.</p>
+<p>The residuals should be normally distributed, with a mean of 0 and a constant variance. If the residuals are not normally distributed, then the model is not capturing all the information in the data. If the residuals have a mean different from 0, then the model is biased. If the variance of the residuals is not constant, then the model is not capturing all the information in the data.</p>
+<ul>
+<li><p>The first step in residual analysis is to plot the quantile-quantile (Q-Q) plot of the residuals. The Q-Q plot is a graphical tool used to compare the distribution of the residuals to the normal distribution. If the residuals are normally distributed, the points in the Q-Q plot will fall on a straight line. If the residuals are not normally distributed, the points will deviate from the straight line.</p></li>
+<li><p>The second step is to determinate if the residuals are uncorrelated. We will use the Ljung-Box test to determine if the residuals are uncorrelated. The null hypothesis of the Ljung-Box test is that the data is independently distributed, meaning that there is no autocorrelation. If the p-value of the Ljung-Box test is less than 0.05, then we reject the null hypothesis and conclude that the residuals are correlated.</p></li>
+</ul>
+</section>
+<section id="autoregressive-integrated-moving-average-arima-process" class="level3">
+<h3 class="anchored" data-anchor-id="autoregressive-integrated-moving-average-arima-process">Autoregressive Integrated Moving Average (ARIMA) Process</h3>
+<p>So far, we have seen the autoregressive process, the moving average process, and the autoregressive moving average process. These models can only be applied to stationary time series, which required us to apply transformations, mainly differencing, and test for stationarity using the ADF test. The forecasts from each model returned differenced values, which we had to reverse to obtain the original values.</p>
+<p>The autoregressive integrated moving average process, or ARIMA, is a generalization of the autoregressive moving average process that can be applied to non-stationary time series. Using this model, we can take into account non-stationary time series and avoid the steps of modeling on differenced data and having to inverse transform the forecasts.</p>
+<p>The ARIMA model is denoted as ARIMA(p, d, q), where p is the order of the autoregressive component AR(p), d is the degree of differencing, and q is the order of the moving average component MA(q).</p>
+<p><span class="math display">\[y'_t = C + \phi_1 y'_{t-1} + \phi_2 y'_{t-2} + ... + \phi_p y'_{t-p} + \epsilon_t + \theta_1 \epsilon'_{t-1} + \theta_2 \epsilon'_{t-2} + ... + \theta_q \epsilon'_{t-q}\]</span></p>
+<p>where <span class="math inline">\(y'_t\)</span> is the differenced time series, and <span class="math inline">\(\epsilon'_t\)</span> is the differenced error term.</p>
+<p>In simple terms, the ARIMA model is simply an ARMA model that can be applied on non-stationary time series.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="ARIMA.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">ARIMA</figcaption>
+</figure>
+</div>
+</section>
+<section id="seasonal-autoregressive-integrated-moving-average-sarima-process" class="level3">
+<h3 class="anchored" data-anchor-id="seasonal-autoregressive-integrated-moving-average-sarima-process">Seasonal Autoregressive Integrated Moving Average (SARIMA) Process</h3>
+<p><span class="math inline">\(\text{SARIMA(p,d,q)}(P,D,Q)_m\)</span> model expands on the ARIMA(p,d,q) model by adding seasonal parameters, where <em>P</em> is the order of the seasonal AR(<em>P</em>) process, <em>D</em> is the seasonal order of integration, <em>Q</em> is the order of the seasonal MA(<em>Q</em>) process, and <em>m</em> is the frequency, or the number of observations per seasonal cycle.</p>
+<p>Note that a <span class="math inline">\(\text{SARIMA(p,d,q)}(0,0,0)_m\)</span> model is equivalent to an ARIMA(<em>p</em>,<em>d</em>,<em>q</em>) model.</p>
+<p>The parameter m stands for the frequency, the number of observations per cycle. For data that was recorded every year, quarter, month, or week, the length of a cycle is considered to be 1 year. If the data was recorded annually, m = 1 since there is only one observation per year. If the data was recorded quarterly, m = 4 since there are four quarters in a year, and therefore four observations per year. Daily data can have a weekly seasonality. In that case, the frequency is m = 7 because there would be seven observations in a full cycle of 1 week. It could also have a yearly seasonality, meaning that m = 365. Thus, you can see that daily and sub-daily data can have a different cycle length, and therefore a different frequency m.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="SARIMA.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">SARIMA</figcaption>
+</figure>
+</div>
+</section>
+<section id="sarima-with-external-variables-sarimax" class="level3">
+<h3 class="anchored" data-anchor-id="sarima-with-external-variables-sarimax">SARIMA with external variables (SARIMAX)</h3>
+<p>Each model that we have explored and used to produce forecasts has considered only the time series itself. In other words, past values of the time series were used as predictors of future values. However, it is possible that external variables also have an impact on our time series and can therefore be good predictors of future values.</p>
+<p>The SARIMAX model simply adds a linear combination of exogenous variables to the SARIMA model. This allows us to model the impact of external variables on the future value of a time series.</p>
+<p><span class="math display">\[x_t = \text{SARIMA(p, d, q) (P, D, Q)}_m + \sum_{i=1}^n \beta_i X_t^i\]</span></p>
+<ul>
+<li>Caveat using SARIMAX
+<ul>
+<li>Recall that the SARIMAX model uses the <span class="math inline">\(\text{SARIMA(p,d,q)}(P,D,Q)_m\)</span> **model and a linear combination of exogenous variables to predict one timestep into the future. But what if you wish to predict two timesteps into the future? While this is possible with a SARIMA model, the SARIMAX model requires us to forecast the exogenous variables too.</li>
+<li>it can be forecast using a version of the SARIMA model. Nevertheless, we know that our forecast always has some error associated with it. Therefore, having to forecast an exogenous variable to forecast our target variable can magnify the prediction error of our target, meaning that our predictions can quickly degrade as we predict more timesteps into the future.</li>
+</ul>
+→ The only way to avoid that situation is to predict only one timestep into the future and wait to observe the exogenous variable before predicting the target for another timestep into the future.</li>
+</ul>
+</section>
+<section id="vector-autoregression-var-model" class="level3">
+<h3 class="anchored" data-anchor-id="vector-autoregression-var-model">Vector AutoRegression (VAR) model</h3>
+<p>With the SARIMAX model, the relationship is unidirectional: we assume that the exogenous variable has an impact on the target only.</p>
+<p>However, it is possible that two time series have a bidirectional relationship, meaning that time series t1 is a predictor of time series t2, and time series t2 is also a predictor for time series t1. In such a case, it would be useful to have a model that can take this bidirectional relationship into account and output predictions for <em>both</em> time series simultaneously.</p>
+<p>→ Vector AutoRegression (VAR) allows us to capture the relationship between multiple time series as they change over time. That, in turn, allows us to produce forecasts for many time series simultaneously, therefore performing multivariate forecasting.</p>
+<p>The VAR(<em>p</em>) model can be seen as a generalization of the AR(<em>p</em>) model that allows for multiple time series. Just like in the AR(<em>p</em>) model, the order <em>p</em> of the VAR(<em>p</em>) model determines how many lagged values impact the present value of a series. In this model, however, we also include lagged values of other time series.</p>
+<p>For two time series, the general equation for the VAR(<em>p</em>) model is a linear combination of a vector of constants, past values of both time series, and a vector of error terms:</p>
+<p><span class="math display">\[\begin{bmatrix} y_{1,t} \\ y_{2,t} \end{bmatrix} = \begin{bmatrix} C_1 \\ C_2 \end{bmatrix} + \begin{bmatrix} A^1_{11} &amp; A^1_{12} \\ A^1_{21} &amp; A^1_{22} \end{bmatrix} \begin{bmatrix} y_{1,t-1} \\ y_{2,t-1} \end{bmatrix} + \begin{bmatrix} A^2_{11} &amp; A^2_{12} \\ A^2_{21} &amp; A^2_{22} \end{bmatrix} \begin{bmatrix} y_{1,t-2} \\ y_{2,t-2} \end{bmatrix} + ... + \begin{bmatrix} \epsilon_{1,t} \\ \epsilon_{2,t} \end{bmatrix}\]</span></p>
+<p>where <span class="math inline">\(y_{1,t}\)</span> and <span class="math inline">\(y_{2,t}\)</span> are the two time series, <span class="math inline">\(A_{ij}\)</span> are the coefficients of the autoregressive model, and <span class="math inline">\(\epsilon_{t}\)</span> is the error term.</p>
+<p>Some importants points to take into account when using VAR model: - the time series must be stationary to apply the VAR model. - each time series has an impact on another. - it is important to test if whether past values of a time series are statistically significant in forecasting another time series -&gt; Granger causality test.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="VAR.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">VAR</figcaption>
+</figure>
+</div>
+</section>
+<section id="prophet" class="level3">
+<h3 class="anchored" data-anchor-id="prophet">Prophet</h3>
+<p>Prophet is a forecasting tool developed by Facebook. It is designed for forecasting time series data that display patterns on different time scales, such as yearly, weekly, and daily. It is based on an additive model where non-linear trends are fit with yearly, weekly, and daily seasonality, plus holiday effects. It works best with time series that have strong seasonal effects and several seasons of historical data. Prophet is robust to missing data and shifts in the trend, and typically handles outliers well.</p>
+<p>Under the hood, Prophet implements a general additive model where each time series <span class="math inline">\(y(t)\)</span> is modeled as the linear combination of a trend <span class="math inline">\(g(t)\)</span>, a seasonal component <span class="math inline">\(s(t)\)</span>, holiday effects <span class="math inline">\(h(t)\)</span>, and an error term <span class="math inline">\(\epsilon_t\)</span>, which is normally distributed.</p>
+<p><span class="math display">\[y(t) = g(t) + s(t) + h(t) + \epsilon_t\]</span></p>
+<ul>
+<li>The trend component models the non-periodic long-term changes in the time series.</li>
+<li>The seasonal component models the periodic change, whether it is yearly, monthly, or weekly, or daily. The holiday effect occurs irregularly and potentially on more than one day. Finally, the error term represents any change in value that cannot be explained by the previous three components.</li>
+</ul>
+<p><strong>Seasonal periods</strong></p>
+<p>The inclusion of multiple seasonal periods was motivated by the observation that human behavior produced multi-period seasonal time series. For example, the five day work week can produce a pattern that repeats every week, while school break can produce a pattern that repeats every year.</p>
+<p>Thus, to take multiple seasonal periods into account, Prophet uses the Fourier series to model multiple periodic effects.</p>
+<p><span class="math display">\[s(t) = \sum_{n=1}^N \Big( a_n cos(\frac{2\pi nt}{P}) + b_n sin(\frac{2\pi nt}{P}) \Big)\]</span></p>
+<ul>
+<li>N is simply the number of parameters we wish to use to estimate the seasonal component. The larger the value of N, the more complex the seasonal component will be.</li>
+<li>if we have a yearly seasonality, P = 365.25, as there are 365.25 days in a year. For a weekly seasonality, P = 7</li>
+</ul>
+<p><strong>Holidays effect</strong></p>
+<p>Holidays are irregular events that can have a clear impact on a time series.</p>
+<ul>
+<li>events such as Black Friday in the United States can dramatically increase the attendance in stores or the sales on an ecommerce website</li>
+<li>Valentine’s Day is probably a strong indicator of an increase in sales of chocolates and flowers</li>
+</ul>
+<p>Prophet lets us define a list of holidays for a specific country. Holiday effects are then incorporated in the model, assuming that they are all independent. If a data point falls on a holiday date, a parameter <span class="math inline">\(K_i\)</span> is calculated to represent the change in the time series at that point in time. The larger the change, the greater the holiday effect.</p>
+<p>If you want to deep dive into Prophet, check the official <a href="https://github.com/facebook/prophet">repo</a></p>
+</section>
+</section>
+<section id="deep-learning" class="level2">
+<h2 class="anchored" data-anchor-id="deep-learning">Deep learning</h2>
+<blockquote class="blockquote">
+<p>When to use deep learning for time series forecasting?</p>
+</blockquote>
+<p>Deep learning shines when we have large complex datasets (supposed to have more than 10K data points). In those situations, deep learning can leverage all the available data to infer relationships between each feature and the target, usually resulting in good forecasts.</p>
+<ul>
+<li>When we have a large enough dataset, a statistical model with take a long time to fit and forecast. In such a case, deep learning can be a good alternative.</li>
+<li>When the dataset has a non-linear relationship between the features and the target, we should consider using deep learning.</li>
+<li>When the data has multiple seasonal periods (hourly, daily, weekly, monthly, yearly), a SARIMAX model cannot be used. In such a case, deep learning should be considered.</li>
+</ul>
+<section id="multilayer-perceptron-mlp" class="level3">
+<h3 class="anchored" data-anchor-id="multilayer-perceptron-mlp">Multilayer Perceptron (MLP)</h3>
+<p>The most basic deep learning model is the multilayer perceptron (MLP). It is a feedforward neural network that consists of an input layer, one or more hidden layers, and an output layer. The input layer takes the features of the dataset, and the output layer returns the forecast. The hidden layers are responsible for learning the relationships between the features and the target.</p>
+<p>In case of time series forecasting, the input layer takes the past values of the time series, and the output layer returns the forecast for the next value of the time series. The hidden layers are responsible for learning the relationships between the past values of the time series and the future value.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> compile_and_fit(model, window, patience<span class="op">=</span><span class="dv">3</span>, max_epochs<span class="op">=</span><span class="dv">50</span>):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    early_stopping <span class="op">=</span> EarlyStopping(monitor<span class="op">=</span><span class="st">'val_loss'</span>,</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>                                   patience<span class="op">=</span>patience,</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>                                   mode<span class="op">=</span><span class="st">'min'</span>)</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">compile</span>(loss<span class="op">=</span>MeanSquaredError(),</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>                  optimizer<span class="op">=</span>Adam(),</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>                  metrics<span class="op">=</span>[MeanAbsoluteError()])</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> model.fit(window.train,</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>                       epochs<span class="op">=</span>max_epochs,</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>                       validation_data<span class="op">=</span>window.val,</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>                       callbacks<span class="op">=</span>[early_stopping])</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> history</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>dense <span class="op">=</span> Sequential([</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>    Dense(units<span class="op">=</span><span class="dv">64</span>, activation<span class="op">=</span><span class="st">'relu'</span>),</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    Dense(units<span class="op">=</span><span class="dv">64</span>, activation<span class="op">=</span><span class="st">'relu'</span>),</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>    Dense(units<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb9-21"><a href="#cb9-21" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb9-22"><a href="#cb9-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-23"><a href="#cb9-23" aria-hidden="true" tabindex="-1"></a><span class="co"># one step</span></span>
+<span id="cb9-24"><a href="#cb9-24" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> compile_and_fit(linear, single_step_window)</span>
+<span id="cb9-25"><a href="#cb9-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-26"><a href="#cb9-26" aria-hidden="true" tabindex="-1"></a>val_performance[<span class="st">'Linear'</span>] <span class="op">=</span> linear.evaluate(single_step_window.val)</span>
+<span id="cb9-27"><a href="#cb9-27" aria-hidden="true" tabindex="-1"></a>performance[<span class="st">'Linear'</span>] <span class="op">=</span> linear.evaluate(single_step_window.test, verbose<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb9-28"><a href="#cb9-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-29"><a href="#cb9-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-30"><a href="#cb9-30" aria-hidden="true" tabindex="-1"></a><span class="co"># multi step </span></span>
+<span id="cb9-31"><a href="#cb9-31" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> compile_and_fit(ms_dense, multi_window)</span>
+<span id="cb9-32"><a href="#cb9-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-33"><a href="#cb9-33" aria-hidden="true" tabindex="-1"></a>ms_val_performance[<span class="st">'Dense'</span>] <span class="op">=</span> ms_dense.evaluate(multi_window.val)</span>
+<span id="cb9-34"><a href="#cb9-34" aria-hidden="true" tabindex="-1"></a>ms_performance[<span class="st">'Dense'</span>] <span class="op">=</span> ms_dense.evaluate(multi_window.test, verbose<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="recurrent-neural-network-rnn" class="level3">
+<h3 class="anchored" data-anchor-id="recurrent-neural-network-rnn">Recurrent Neural Network (RNN)</h3>
+<p>The recurrent neural network (RNN) is a type of neural network that is well-suited for time series forecasting. It is designed to take into account the sequential nature of time series data. The RNN has a feedback loop that allows information to be passed from one step of the network to the next. This feedback loop allows the RNN to take into account the past values of the time series when making a forecast.</p>
+<p>The RNN is composed of a cell that takes the input and the hidden state from the previous timestep and returns the output and the hidden state for the current timestep. The hidden state is then passed to the next timestep, and so on. The output of the RNN is the forecast for the next value of the time series. There are many types of RNN cells, such as the simple RNN cell, the long short-term memory (LSTM) cell, and the gated recurrent unit (GRU) cell.</p>
+<p>If you want to know more about LSTM, check this awsesome blog <a href="http://colah.github.io/posts/2015-08-Understanding-LSTMs/">Understanding LSTM Networks by Colah</a></p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>lstm_model <span class="op">=</span> Sequential([</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    LSTM(<span class="dv">32</span>, return_sequences<span class="op">=</span><span class="va">False</span>),</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    Dense(units<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> compile_and_fit(lstm_model, single_step_window)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="convolutional-neural-network-cnn" class="level3">
+<h3 class="anchored" data-anchor-id="convolutional-neural-network-cnn">Convolutional Neural Network (CNN)</h3>
+<p>A convolutional neural network is a deep learning architecture that makes use of convolutional operation. The convolution operation allows the network to create a reduced set of features. Therefore, it is a way of regularizing the network, preventing overfitting, and effectively filtering the inputs.</p>
+<p>The convolution is performed with a kernel, which is also trained during model fitting. The stride of the kernel determines the number of steps it shifts at each step of the convolution. In time series forecasting, only <strong>1D convolution</strong> is used. To avoid reducing the feature space too quickly, we can use padding, which adds zeros before and after the input vector. This keeps the output dimension the same as the original feature vector, allowing us to stack more convolution layers, which in turn allows the network to process the features for a longer time.</p>
+<blockquote class="blockquote">
+<p>A 1D convolutional network takes as input a 3-dimensional tensor and also outputs a 3-dimensional tensor. The input tensor of our TCN implementation has the shape (batch_size, input_length, input_size) and the output tensor has the shape (batch_size, input_length, output_size). Since every layer in a TCN has the same input and output length, only the third dimension of the input and output tensors differs. In the univariate case, input_size and output_size will both be equal to one. In the more general multivariate case, input_size and output_size might differ since we might not want to forecast every component of the input sequence.<br>
+One single 1D convolutional layer receives an input tensor of shape (batch_size, input_length, nr_input_channels) and outputs a tensor of shape (batch_size, input_length, nr_output_channels)</p>
+</blockquote>
+<div class="sourceCode" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>KERNEL_WIDTH <span class="op">=</span> <span class="dv">3</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>LABEL_WIDTH <span class="op">=</span> <span class="dv">24</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>INPUT_WIDTH <span class="op">=</span> LABEL_WIDTH <span class="op">+</span> KERNEL_WIDTH <span class="op">-</span> <span class="dv">1</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>cnn_model <span class="op">=</span> Sequential([</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>    Conv1D(filters<span class="op">=</span><span class="dv">32</span>,</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>          kernel_size<span class="op">=</span>(KERNEL_WIDTH,),</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>          activation<span class="op">=</span><span class="st">'relu'</span>),</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    Dense(units<span class="op">=</span><span class="dv">32</span>, activation<span class="op">=</span><span class="st">'relu'</span>),</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    Dense(units<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> compile_and_fit(cnn_model, conv_window)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</section>
+<section id="temporal-convolutional-network-tcn" class="level3">
+<h3 class="anchored" data-anchor-id="temporal-convolutional-network-tcn">Temporal Convolutional Network (TCN)</h3>
+<p>TCN consists of dilated, causal 1D convolutional layers with the same input and output lengths.</p>
+<p>Advantages of TCN: - TCNs exhibit longer memory than recurrent architectures with the same capacity. - Performs better than LSTM/GRU on long time series (Seq. MNIST, Adding Problem, Copy Memory, Word-level PTB…). - Parallelism (convolutional layers), flexible receptive field size (how far the model can see), stable gradients (compared to backpropagation through time, vanishing gradients)…</p>
+<p>A disadvantage of this basic design is that in order to achieve a long effective history size, we need an extremely deep network or very large filters.</p>
+<div class="quarto-figure quarto-figure-center">
+<figure class="figure">
+<p><img src="tcn.png" class="img-fluid figure-img"></p>
+<figcaption class="figure-caption">TCN</figcaption>
+</figure>
+</div>
+</section>
+<section id="transformer" class="level3">
+<h3 class="anchored" data-anchor-id="transformer">Transformer</h3>
+<p>The transformer architecture was introduced in the paper “Attention is All You Need” by Vaswani et al.&nbsp;in 2017. It is a deep learning architecture that is based on the self-attention mechanism. The self-attention mechanism allows the network to weigh the importance of each input feature when making a prediction.</p>
+<p>Transformers introduced two building blocks – multi-head attention and positional embeddings. Rather than working sequentially, sequences are processed as a whole rather than item by item. They employ self-attention, where similarity scores between items in a sentence are stored.</p>
+</section>
+<section id="neuralprophet" class="level3">
+<h3 class="anchored" data-anchor-id="neuralprophet">NeuralProphet</h3>
+<p>NeuralProphet is a framework for interpretable time series forecasting. NeuralProphet is built on PyTorch and combines Neural Networks and traditional time-series algorithms, inspired by Facebook Prophet and AR-Net.</p>
+</section>
+</section>
+<section id="reference" class="level2">
+<h2 class="anchored" data-anchor-id="reference">Reference</h2>
+<ol type="1">
+<li>Time Series Forecasting in Python by Marco Peixeiro</li>
+<li>Machine Learning for Time Series with Python By Ben Auffarth</li>
+</ol>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+window.document.addEventListener("DOMContentLoaded", function (event) {
+  const toggleBodyColorMode = (bsSheetEl) => {
+    const mode = bsSheetEl.getAttribute("data-mode");
+    const bodyEl = window.document.querySelector("body");
+    if (mode === "dark") {
+      bodyEl.classList.add("quarto-dark");
+      bodyEl.classList.remove("quarto-light");
+    } else {
+      bodyEl.classList.add("quarto-light");
+      bodyEl.classList.remove("quarto-dark");
+    }
+  }
+  const toggleBodyColorPrimary = () => {
+    const bsSheetEl = window.document.querySelector("link#quarto-bootstrap");
+    if (bsSheetEl) {
+      toggleBodyColorMode(bsSheetEl);
+    }
+  }
+  toggleBodyColorPrimary();  
+  const icon = "";
+  const anchorJS = new window.AnchorJS();
+  anchorJS.options = {
+    placement: 'right',
+    icon: icon
+  };
+  anchorJS.add('.anchored');
+  const isCodeAnnotation = (el) => {
+    for (const clz of el.classList) {
+      if (clz.startsWith('code-annotation-')) {                     
+        return true;
+      }
+    }
+    return false;
+  }
+  const clipboard = new window.ClipboardJS('.code-copy-button', {
+    text: function(trigger) {
+      const codeEl = trigger.previousElementSibling.cloneNode(true);
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+  });
+  clipboard.on('success', function(e) {
+    // button target
+    const button = e.trigger;
+    // don't keep focus
+    button.blur();
+    // flash "checked"
+    button.classList.add('code-copy-button-checked');
+    var currentTitle = button.getAttribute("title");
+    button.setAttribute("title", "Copied!");
+    let tooltip;
+    if (window.bootstrap) {
+      button.setAttribute("data-bs-toggle", "tooltip");
+      button.setAttribute("data-bs-placement", "left");
+      button.setAttribute("data-bs-title", "Copied!");
+      tooltip = new bootstrap.Tooltip(button, 
+        { trigger: "manual", 
+          customClass: "code-copy-button-tooltip",
+          offset: [0, -8]});
+      tooltip.show();    
+    }
+    setTimeout(function() {
+      if (tooltip) {
+        tooltip.hide();
+        button.removeAttribute("data-bs-title");
+        button.removeAttribute("data-bs-toggle");
+        button.removeAttribute("data-bs-placement");
+      }
+      button.setAttribute("title", currentTitle);
+      button.classList.remove('code-copy-button-checked');
+    }, 1000);
+    // clear code selection
+    e.clearSelection();
+  });
+  function tippyHover(el, contentFn) {
+    const config = {
+      allowHTML: true,
+      content: contentFn,
+      maxWidth: 500,
+      delay: 100,
+      arrow: false,
+      appendTo: function(el) {
+          return el.parentElement;
+      },
+      interactive: true,
+      interactiveBorder: 10,
+      theme: 'quarto',
+      placement: 'bottom-start'
+    };
+    window.tippy(el, config); 
+  }
+  const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+  for (var i=0; i<noterefs.length; i++) {
+    const ref = noterefs[i];
+    tippyHover(ref, function() {
+      // use id or data attribute instead here
+      let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+      try { href = new URL(href).hash; } catch {}
+      const id = href.replace(/^#\/?/, "");
+      const note = window.document.getElementById(id);
+      return note.innerHTML;
+    });
+  }
+      let selectedAnnoteEl;
+      const selectorForAnnotation = ( cell, annotation) => {
+        let cellAttr = 'data-code-cell="' + cell + '"';
+        let lineAttr = 'data-code-annotation="' +  annotation + '"';
+        const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+        return selector;
+      }
+      const selectCodeLines = (annoteEl) => {
+        const doc = window.document;
+        const targetCell = annoteEl.getAttribute("data-target-cell");
+        const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+        const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+        const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+        const lineIds = lines.map((line) => {
+          return targetCell + "-" + line;
+        })
+        let top = null;
+        let height = null;
+        let parent = null;
+        if (lineIds.length > 0) {
+            //compute the position of the single el (top and bottom and make a div)
+            const el = window.document.getElementById(lineIds[0]);
+            top = el.offsetTop;
+            height = el.offsetHeight;
+            parent = el.parentElement.parentElement;
+          if (lineIds.length > 1) {
+            const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+            const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+            height = bottom - top;
+          }
+          if (top !== null && height !== null && parent !== null) {
+            // cook up a div (if necessary) and position it 
+            let div = window.document.getElementById("code-annotation-line-highlight");
+            if (div === null) {
+              div = window.document.createElement("div");
+              div.setAttribute("id", "code-annotation-line-highlight");
+              div.style.position = 'absolute';
+              parent.appendChild(div);
+            }
+            div.style.top = top - 2 + "px";
+            div.style.height = height + 4 + "px";
+            let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+            if (gutterDiv === null) {
+              gutterDiv = window.document.createElement("div");
+              gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+              gutterDiv.style.position = 'absolute';
+              const codeCell = window.document.getElementById(targetCell);
+              const gutter = codeCell.querySelector('.code-annotation-gutter');
+              gutter.appendChild(gutterDiv);
+            }
+            gutterDiv.style.top = top - 2 + "px";
+            gutterDiv.style.height = height + 4 + "px";
+          }
+          selectedAnnoteEl = annoteEl;
+        }
+      };
+      const unselectCodeLines = () => {
+        const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+        elementsIds.forEach((elId) => {
+          const div = window.document.getElementById(elId);
+          if (div) {
+            div.remove();
+          }
+        });
+        selectedAnnoteEl = undefined;
+      };
+      // Attach click handler to the DT
+      const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+      for (const annoteDlNode of annoteDls) {
+        annoteDlNode.addEventListener('click', (event) => {
+          const clickedEl = event.target;
+          if (clickedEl !== selectedAnnoteEl) {
+            unselectCodeLines();
+            const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+            if (activeEl) {
+              activeEl.classList.remove('code-annotation-active');
+            }
+            selectCodeLines(clickedEl);
+            clickedEl.classList.add('code-annotation-active');
+          } else {
+            // Unselect the line
+            unselectCodeLines();
+            clickedEl.classList.remove('code-annotation-active');
+          }
+        });
+      }
+  const findCites = (el) => {
+    const parentEl = el.parentElement;
+    if (parentEl) {
+      const cites = parentEl.dataset.cites;
+      if (cites) {
+        return {
+          el,
+          cites: cites.split(' ')
+        };
+      } else {
+        return findCites(el.parentElement)
+      }
+    } else {
+      return undefined;
+    }
+  };
+  var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+  for (var i=0; i<bibliorefs.length; i++) {
+    const ref = bibliorefs[i];
+    const citeInfo = findCites(ref);
+    if (citeInfo) {
+      tippyHover(citeInfo.el, function() {
+        var popup = window.document.createElement('div');
+        citeInfo.cites.forEach(function(cite) {
+          var citeDiv = window.document.createElement('div');
+          citeDiv.classList.add('hanging-indent');
+          citeDiv.classList.add('csl-entry');
+          var biblioDiv = window.document.getElementById('ref-' + cite);
+          if (biblioDiv) {
+            citeDiv.innerHTML = biblioDiv.innerHTML;
+          }
+          popup.appendChild(citeDiv);
+        });
+        return popup.innerHTML;
+      });
+    }
+  }
+});
+</script>
+<script src="https://utteranc.es/client.js" repo="https://github.com/mrtunguyen/mrtunguyen.github.io" issue-term="pathname" theme="github-light" crossorigin="anonymous" async="">
+</script>
+</div> <!-- /content -->
+
+
+
+</body></html>

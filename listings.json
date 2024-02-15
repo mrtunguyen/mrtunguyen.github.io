@@ -2,6 +2,8 @@
   {
     "listing": "/index.html",
     "items": [
+      "/posts/time-series/time-series.html",
+      "/posts/quantized-llms/quantized-llm.html",
       "/posts/finetuning-llm/finetuning_inference_zypher7b.html",
       "/posts/RAG/What you should know about RAG (Retrieved-Augmente 5ffd27cf98504d6ca45823cc8e3b118d.html",
       "/posts/Llama-2/2023-08-21-Everything you need to know about Llama 2.html",
