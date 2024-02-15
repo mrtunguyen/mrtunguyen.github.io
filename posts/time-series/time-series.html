@@ -575,23 +575,70 @@ One single 1D convolutional layer receives an input tensor of shape (batch_size,
 <section id="temporal-convolutional-network-tcn" class="level3">
 <h3 class="anchored" data-anchor-id="temporal-convolutional-network-tcn">Temporal Convolutional Network (TCN)</h3>
 <p>TCN consists of dilated, causal 1D convolutional layers with the same input and output lengths.</p>
-<p>Advantages of TCN: - TCNs exhibit longer memory than recurrent architectures with the same capacity. - Performs better than LSTM/GRU on long time series (Seq. MNIST, Adding Problem, Copy Memory, Word-level PTB…). - Parallelism (convolutional layers), flexible receptive field size (how far the model can see), stable gradients (compared to backpropagation through time, vanishing gradients)…</p>
+<p>Advantages of TCN: - TCNs exhibit longer memory than recurrent architectures with the same capacity.<br>
+- Performs better than LSTM/GRU on long time series (Seq. MNIST, Adding Problem, Copy Memory, Word-level PTB…).<br>
+- Parallelism (convolutional layers), flexible receptive field size (how far the model can see), stable gradients (compared to backpropagation through time, vanishing gradients)…</p>
 <p>A disadvantage of this basic design is that in order to achieve a long effective history size, we need an extremely deep network or very large filters.</p>
+<p><strong>Dilated Casual convolutions</strong></p>
+<p>The dilation part refers to the fact that points are skipped in the arrangement of the convolutional filters, such that any given point goes only into one convolutional filter in each level of layering. This promotes model sparsity and reduces redundant or overlapping convolutions, allowing the model to look further back in time while keeping overall computations reasonably contained.</p>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="tcn.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">TCN</figcaption>
+<figcaption class="figure-caption">Dilated Casual Convolutions</figcaption>
 </figure>
 </div>
+<div class="sourceCode" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> keras.layers <span class="im">import</span> Conv1D, Input, Add, Activation, Dropout</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> keras.models <span class="im">import</span> Sequential, Model</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> keras.layers.advanced_activations <span class="im">import</span> LeakyReLU, ELU</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> keras <span class="im">import</span> optimizers</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> tensorflow <span class="im">as</span> tf</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> DC_CNN_Block(nb_filter, filter_length, dilation):</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> f(input_):</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        residual <span class="op">=</span>  input_</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>        layer_out <span class="op">=</span> Conv1D(</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>            filters<span class="op">=</span>nb_filter, kernel_size<span class="op">=</span>filter_length,</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>            dilation_rate<span class="op">=</span>dilation,</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>            activation<span class="op">=</span><span class="st">'linear'</span>, padding<span class="op">=</span><span class="st">'causal'</span>, use_bias<span class="op">=</span><span class="va">False</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>            )(input_)</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>        layer_out <span class="op">=</span> Activation(<span class="st">'selu'</span>)(layer_out)</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>        skip_out <span class="op">=</span> Conv1D(<span class="dv">1</span>, <span class="dv">1</span>, activation<span class="op">=</span><span class="st">'linear'</span>, use_bias<span class="op">=</span><span class="va">False</span>)(layer_out)</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>        network_in <span class="op">=</span> Conv1D(<span class="dv">1</span>, <span class="dv">1</span>, activation<span class="op">=</span><span class="st">'linear'</span>, use_bias<span class="op">=</span><span class="va">False</span>)(layer_out)</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>        network_out <span class="op">=</span> Add()([residual, network_in])</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> network_out, skip_out</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> f</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> DC_CNN_Model(length):</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>    <span class="bu">input</span> <span class="op">=</span> Input(shape<span class="op">=</span>(length,<span class="dv">1</span>))</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    l1a, l1b <span class="op">=</span> DC_CNN_Block(<span class="dv">32</span>, <span class="dv">2</span>, <span class="dv">1</span>)(<span class="bu">input</span>)</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>    l2a, l2b <span class="op">=</span> DC_CNN_Block(<span class="dv">32</span>, <span class="dv">2</span>, <span class="dv">2</span>)(l1a)</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>    l3a, l3b <span class="op">=</span> DC_CNN_Block(<span class="dv">32</span>, <span class="dv">2</span>, <span class="dv">4</span>)(l2a)</span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>    l4a, l4b <span class="op">=</span> DC_CNN_Block(<span class="dv">32</span>, <span class="dv">2</span>, <span class="dv">8</span>)(l3a)</span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>    l5a, l5b <span class="op">=</span> DC_CNN_Block(<span class="dv">32</span>, <span class="dv">2</span>, <span class="dv">16</span>)(l4a)</span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>    l6a, l6b <span class="op">=</span> DC_CNN_Block(<span class="dv">32</span>, <span class="dv">2</span>, <span class="dv">32</span>)(l5a)</span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a>    l6b <span class="op">=</span> Dropout(<span class="fl">0.8</span>)(l6b)</span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a>    l7a, l7b <span class="op">=</span> DC_CNN_Block(<span class="dv">32</span>, <span class="dv">2</span>, <span class="dv">64</span>)(l6a)</span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>    l7b <span class="op">=</span> Dropout(<span class="fl">0.8</span>)(l7b)</span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>    l8 <span class="op">=</span>   Add()([l1b, l2b, l3b, l4b, l5b, l6b, l7b])</span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a>    l9 <span class="op">=</span>   Activation(<span class="st">'relu'</span>)(l8)</span>
+<span id="cb12-37"><a href="#cb12-37" aria-hidden="true" tabindex="-1"></a>    l21 <span class="op">=</span>  Conv1D(<span class="dv">1</span>, <span class="dv">1</span>, activation<span class="op">=</span><span class="st">'linear'</span>, use_bias<span class="op">=</span><span class="va">False</span>)(l9)</span>
+<span id="cb12-38"><a href="#cb12-38" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> Model(inputs<span class="op">=</span><span class="bu">input</span>, outputs<span class="op">=</span>l21)</span>
+<span id="cb12-39"><a href="#cb12-39" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">compile</span>(loss<span class="op">=</span><span class="st">'mae'</span>, optimizer<span class="op">=</span>optimizers.Adam(),</span>
+<span id="cb12-40"><a href="#cb12-40" aria-hidden="true" tabindex="-1"></a>metrics<span class="op">=</span>[<span class="st">'mse'</span>])</span>
+<span id="cb12-41"><a href="#cb12-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </section>
 <section id="transformer" class="level3">
 <h3 class="anchored" data-anchor-id="transformer">Transformer</h3>
 <p>The transformer architecture was introduced in the paper “Attention is All You Need” by Vaswani et al.&nbsp;in 2017. It is a deep learning architecture that is based on the self-attention mechanism. The self-attention mechanism allows the network to weigh the importance of each input feature when making a prediction.</p>
 <p>Transformers introduced two building blocks – multi-head attention and positional embeddings. Rather than working sequentially, sequences are processed as a whole rather than item by item. They employ self-attention, where similarity scores between items in a sentence are stored.</p>
+<p>There are a lot of works that have been done to adapt the transformer architecture to time series forecasting. The main idea is to use the transformer architecture to capture the temporal dependencies in the time series. Check this blog <a href="https://huggingface.co/blog/autoformer">Yes, Transformers are Effective for Time Series Forecasting (+ Autoformer)</a> or this <a href="https://arxiv.org/pdf/2202.07125.pdf">paper Transformers in Time Series: A Survey</a></p>
 </section>
 <section id="neuralprophet" class="level3">
 <h3 class="anchored" data-anchor-id="neuralprophet">NeuralProphet</h3>
 <p>NeuralProphet is a framework for interpretable time series forecasting. NeuralProphet is built on PyTorch and combines Neural Networks and traditional time-series algorithms, inspired by Facebook Prophet and AR-Net.</p>
+<p>Check the official <a href="https://github.com/ourownstory/neural_prophet">repo</a> for more details.</p>
 </section>
 </section>
 <section id="reference" class="level2">
@@ -599,6 +646,7 @@ One single 1D convolutional layer receives an input tensor of shape (batch_size,
 <ol type="1">
 <li>Time Series Forecasting in Python by Marco Peixeiro</li>
 <li>Machine Learning for Time Series with Python By Ben Auffarth</li>
+<li><a href="https://github.com/unit8co/darts">Darts</a></li>
 </ol>
 
 
