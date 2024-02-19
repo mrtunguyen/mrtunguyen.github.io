@@ -383,7 +383,7 @@ p-value: 5.01119615882467e-28</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="autoregressive.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">Autoregressive</figcaption>
+<figcaption class="figure-caption">Autoregressive step-by-step schema.</figcaption>
 </figure>
 </div>
 </section>
@@ -395,7 +395,7 @@ p-value: 5.01119615882467e-28</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="ARMA.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">ARMA</figcaption>
+<figcaption class="figure-caption">ARMA steps-by-steps schema</figcaption>
 </figure>
 </div>
 <p><strong>Understanding the Akaike information criterion (AIC)</strong></p>
@@ -421,7 +421,7 @@ p-value: 5.01119615882467e-28</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="ARIMA.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">ARIMA</figcaption>
+<figcaption class="figure-caption">ARIMA steps-by-steps schema</figcaption>
 </figure>
 </div>
 </section>
@@ -433,7 +433,7 @@ p-value: 5.01119615882467e-28</code></pre>
 <div class="quarto-figure quarto-figure-center">
 <figure class="figure">
 <p><img src="SARIMA.png" class="img-fluid figure-img"></p>
-<figcaption class="figure-caption">SARIMA</figcaption>
+<figcaption class="figure-caption">SARIMA steps-by-steps schema</figcaption>
 </figure>
 </div>
 </section>
@@ -644,7 +644,7 @@ One single 1D convolutional layer receives an input tensor of shape (batch_size,
 </section>
 <section id="deepar" class="level3">
 <h3 class="anchored" data-anchor-id="deepar">DeepAR</h3>
-<p><a href="https://arxiv.org/pdf/1704.04110.pdf">DeepAR</a> is a probabilistic forecasting algorithm developed by Amazon Web Services (AWS) as part of their SageMaker platform. It’s specifically designed for time-series forecasting.</p>
+<p><a href="https://arxiv.org/pdf/1704.04110.pdf">DeepAR</a> is a probabilistic forecasting algorithm developed by Amazon Web Services (AWS) as part of their SageMaker platform. It’s specifically considered as a model to benchmark for many time-series forecasting problems.</p>
 <ul>
 <li><p>DeepAR utilizes long short-term memory (LSTM) networks, to capture complex patterns and dependencies in the time series data. Instead of using LSTMs to calculate predictions directly, DeepAR leverages LSTMs to parameterize a Gaussian likelihood function. That is, to estimate the <span class="math inline">\(\theta = (\phi, \gamma)\)</span> parameters (mean and standard deviation) of the Gaussian function.</p></li>
 <li><p>One of the key features of DeepAR is its ability to handle uncertainty in forecasts by generating probabilistic predictions. Instead of just providing a single point estimate for each forecast, DeepAR produces a full probability distribution over future values, allowing users to understand the range of possible outcomes and their associated probabilities. This can be particularly useful in various applications such as demand forecasting, financial forecasting, and resource planning, where understanding uncertainty is crucial for decision-making.</p></li>
@@ -655,6 +655,15 @@ One single 1D convolutional layer receives an input tensor of shape (batch_size,
 <figcaption class="figure-caption">Summary of the DeepAR model for training (left) and inference (right)</figcaption>
 </figure>
 </div>
+<p><strong>How to train DeepAR?</strong></p>
+<ol type="1">
+<li>First, the LSTM cell takes as input the covariates <span class="math inline">\(x_{i,t}\)</span> of the current time step <span class="math inline">\(t\)</span> and the target variable <span class="math inline">\(z_{i, t-1}\)</span> of the previous time step <span class="math inline">\(t-1\)</span>. Also, the LSTM receives the hidden state <span class="math inline">\(h_{i, t-1}\)</span> from the previous time step. The LSTM cell outputs the hidden state <span class="math inline">\(h_{i, t}\)</span> for the current time step <span class="math inline">\(t\)</span>.</li>
+<li>The <span class="math inline">\((\phi, \gamma)\)</span> values are indirectly computed from <span class="math inline">\(h_{i, t}\)</span> and become the parameters of the Gaussian likelihood function <span class="math inline">\(p(y_i | \theta_i) = l(z_{i, t} | \theta_{i, t})\)</span>. The model tries to answer this question: What are the best parameters <span class="math inline">\((\phi, \gamma)\)</span> that construct a gaussian distribution which outputs predictions as close as possible to the real values?</li>
+<li>The current target value <span class="math inline">\(z_{i, t}\)</span> is then sampled from the Gaussian likelihood function <span class="math inline">\(p(y_i | \theta_i)\)</span>, and the process is repeated for the next time step.</li>
+</ol>
+<p>Since DeepAR trains (and predicts) a single data point each time, the model is called <strong>autoregressive</strong>.</p>
+<p><strong>How to do inference?</strong></p>
+<p>The steps for inference are pretty much the same as training steps. But one thing changes: the model does not sample the target value <span class="math inline">\(z_{i, t}\)</span> from the Gaussian likelihood function <span class="math inline">\(p(y_i | \theta_i)\)</span>. Instead, it uses the mean of the Gaussian likelihood function as the prediction for the target value <span class="math inline">\(z_{i, t}\)</span>.</p>
 </section>
 </section>
 <section id="time-series-frameworks-and-libraries" class="level2">
