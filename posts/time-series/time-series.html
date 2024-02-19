@@ -220,7 +220,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </nav>
     </div>
 <!-- main -->
-<main class="content quarto-banner-title-block" id="quarto-document-content">
+<main class="content quarto-banner-title-block page-columns page-full" id="quarto-document-content">
 
 
 
@@ -360,9 +360,9 @@ p-value: 5.01119615882467e-28</code></pre>
 </div>
 </section>
 </section>
-<section id="statistical-models" class="level2">
+<section id="statistical-models" class="level2 page-columns page-full">
 <h2 class="anchored" data-anchor-id="statistical-models">Statistical Models</h2>
-<section id="moving-average" class="level3">
+<section id="moving-average" class="level3 page-columns page-full">
 <h3 class="anchored" data-anchor-id="moving-average">Moving average</h3>
 <p>A moving average process, or the moving average (MA) model, states that the current value is linearly dependent on the current and past error terms. The error terms are assumed to be mutually independent and normally distributed, just like white noise.</p>
 <p>A moving average model is denoted as <span class="math inline">\(MA(q)\)</span>, where <span class="math inline">\(q\)</span> is the order. The model expresses the present value as a linear combination of the mean of the series <span class="math inline">\(\mu\)</span>, the present error term <span class="math inline">\(\epsilon_t\)</span>, and past error terms <span class="math inline">\(\epsilon_t - q\)</span>. The magnitude of the impact of past errors on the present value is quantified using a coefficient denoted as <span class="math inline">\(\theta_q\)</span>.</p>
@@ -373,6 +373,11 @@ p-value: 5.01119615882467e-28</code></pre>
 <figcaption class="figure-caption">moving average</figcaption>
 </figure>
 </div>
+<aside>
+<p>💡 <strong>Autocorrelation function</strong></p>
+<p>The autocorrelation function (ACF) measures the linear relationship between lagged values of a time series.</p>
+<p>In other words, it measures the correlation of the time series with itself.</p>
+</aside>
 </section>
 <section id="autoregressive-process" class="level3">
 <h3 class="anchored" data-anchor-id="autoregressive-process">Autoregressive Process</h3>
