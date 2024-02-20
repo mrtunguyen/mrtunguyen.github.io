@@ -95,6 +95,9 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
     "search-label": "Search"
   }
 }</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" integrity="sha512-c3Nl8+7g4LMSTdrm621y7kf9v3SDPnhxLNhcjFJbKECVnmZHTdo+IRO05sNLTH/D3vA6u1X32ehoLC7WFVdheg==" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.5.1/jquery.min.js" integrity="sha512-bLT0Qm9VnAYZDflyKcBaQ2gg0hSYNQrJ8RilYldYQ1FxQYoCLtUjuuRuZo+fjqhx/qtq/1itJ0C2ejDxltZVFg==" crossorigin="anonymous"></script>
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
 
   <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
   <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
@@ -214,6 +217,14 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#darts" id="toc-darts" class="nav-link" data-scroll-target="#darts">Darts</a></li>
   <li><a href="#neuralprophet" id="toc-neuralprophet" class="nav-link" data-scroll-target="#neuralprophet">NeuralProphet</a></li>
   <li><a href="#pytorch-forecasting" id="toc-pytorch-forecasting" class="nav-link" data-scroll-target="#pytorch-forecasting">pytorch-forecasting</a></li>
+  </ul></li>
+  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice">Practice</a>
+  <ul class="collapse">
+  <li><a href="#identify-and-visualize-the-seasonal-component-of-the-time-series" id="toc-identify-and-visualize-the-seasonal-component-of-the-time-series" class="nav-link" data-scroll-target="#identify-and-visualize-the-seasonal-component-of-the-time-series">1. Identify and visualize the seasonal component of the time series</a></li>
+  <li><a href="#apply-the-adf-test-to-check-if-the-time-series-is-stationary" id="toc-apply-the-adf-test-to-check-if-the-time-series-is-stationary" class="nav-link" data-scroll-target="#apply-the-adf-test-to-check-if-the-time-series-is-stationary">2. Apply the ADF test to check if the time series is stationary</a></li>
+  <li><a href="#apply-a-transformation-to-make-the-time-series-stationary" id="toc-apply-a-transformation-to-make-the-time-series-stationary" class="nav-link" data-scroll-target="#apply-a-transformation-to-make-the-time-series-stationary">3. Apply a transformation to make the time series stationary</a></li>
+  <li><a href="#fitting-arima-model" id="toc-fitting-arima-model" class="nav-link" data-scroll-target="#fitting-arima-model">Fitting ARIMA model</a></li>
+  <li><a href="#fitting-sarima-model" id="toc-fitting-sarima-model" class="nav-link" data-scroll-target="#fitting-sarima-model">Fitting SARIMA model</a></li>
   </ul></li>
   <li><a href="#reference" id="toc-reference" class="nav-link" data-scroll-target="#reference">Reference</a></li>
   </ul>
@@ -690,6 +701,887 @@ One single 1D convolutional layer receives an input tensor of shape (batch_size,
 <section id="pytorch-forecasting" class="level3">
 <h3 class="anchored" data-anchor-id="pytorch-forecasting">pytorch-forecasting</h3>
 <p>This <a href="https://github.com/jdb78/pytorch-forecasting">repo</a> is quite nice since it provides a training pipeline on pandas dataframes and leverages Pytorch Lightning for scalable training on multiple GPUs. It includes DeepAR, N-BEATS, and Temporal Fusion Transformers.</p>
+</section>
+</section>
+<section id="practice" class="level2">
+<h2 class="anchored" data-anchor-id="practice">Practice</h2>
+<div class="cell" data-execution_count="23">
+<div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error, mean_absolute_error</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.graphics.tsaplots <span class="im">import</span> plot_acf, plot_pacf</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.seasonal <span class="im">import</span> seasonal_decompose, STL</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.stats.diagnostic <span class="im">import</span> acorr_ljungbox</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.statespace.sarimax <span class="im">import</span> SARIMAX</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.arima_process <span class="im">import</span> ArmaProcess</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.graphics.gofplots <span class="im">import</span> qqplot</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.stattools <span class="im">import</span> adfuller</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> tqdm <span class="im">import</span> tqdm</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> itertools <span class="im">import</span> product</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> typing <span class="im">import</span> Union</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="op">%</span>matplotlib inline</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> warnings</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>warnings.filterwarnings(<span class="st">'ignore'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<p>We will go back to our dataset in the first section to try out some practices.</p>
+<blockquote class="blockquote">
+<p>The Airline Passengers dataset describes the total number of airline passengers over a period of time. The units are a count of the number of airline passengers in thousands. There are 144 monthly observations from 1949 to 1960.</p>
+</blockquote>
+<div class="cell" data-execution_count="2">
+<div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>df <span class="op">=</span> pd.read_csv(<span class="st">'https://raw.githubusercontent.com/jbrownlee/Datasets/master/airline-passengers.csv'</span>, header<span class="op">=</span><span class="dv">0</span>, index_col<span class="op">=</span><span class="dv">0</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="3">
+<div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>df.head()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Passengers</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Month</th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1949-01</td>
+<td>112</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1949-02</td>
+<td>118</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1949-03</td>
+<td>132</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1949-04</td>
+<td>129</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1949-05</td>
+<td>121</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<section id="identify-and-visualize-the-seasonal-component-of-the-time-series" class="level3">
+<h3 class="anchored" data-anchor-id="identify-and-visualize-the-seasonal-component-of-the-time-series">1. Identify and visualize the seasonal component of the time series</h3>
+<div class="cell" data-execution_count="4">
+<div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.seasonal <span class="im">import</span> STL</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>decomposition <span class="op">=</span> STL(df[<span class="st">'Passengers'</span>], period<span class="op">=</span><span class="dv">12</span>).fit()</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>fig, (ax1, ax2, ax3, ax4) <span class="op">=</span> plt.subplots(nrows<span class="op">=</span><span class="dv">4</span>, ncols<span class="op">=</span><span class="dv">1</span>, sharex<span class="op">=</span><span class="va">True</span>, figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">8</span>))</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>ax1.plot(decomposition.observed)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>ax1.set_ylabel(<span class="st">'Observed'</span>)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>ax2.plot(decomposition.trend)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>ax2.set_ylabel(<span class="st">'Trend'</span>)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>ax3.plot(decomposition.seasonal)</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>ax3.set_ylabel(<span class="st">'Seasonal'</span>)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>ax4.plot(decomposition.resid)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>ax4.set_ylabel(<span class="st">'Residuals'</span>)</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>plt.xticks(np.arange(<span class="dv">0</span>, <span class="dv">145</span>, <span class="dv">12</span>), np.arange(<span class="dv">1949</span>, <span class="dv">1962</span>, <span class="dv">1</span>))</span>
+<span id="cb16-20"><a href="#cb16-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-21"><a href="#cb16-21" aria-hidden="true" tabindex="-1"></a>fig.autofmt_xdate()</span>
+<span id="cb16-22"><a href="#cb16-22" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-11-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="apply-the-adf-test-to-check-if-the-time-series-is-stationary" class="level3">
+<h3 class="anchored" data-anchor-id="apply-the-adf-test-to-check-if-the-time-series-is-stationary">2. Apply the ADF test to check if the time series is stationary</h3>
+<p>The presenece of a trend means that our series is likely non-stationary. Let’s verify that using the Augmented Dickey-Fuller (ADF) test.</p>
+<div class="cell" data-execution_count="5">
+<div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.stattools <span class="im">import</span> adfuller</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>ADF_result <span class="op">=</span> adfuller(df[<span class="st">'Passengers'</span>])</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'ADF Statistic: </span><span class="sc">{</span>ADF_result[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'p-value: </span><span class="sc">{</span>ADF_result[<span class="dv">1</span>]<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ADF Statistic: 0.8153688792060447
+p-value: 0.9918802434376409</code></pre>
+</div>
+</div>
+<p>The ADF statistic of 0.815 is not a large negative number and p-value of 0.991, which is greater than 0.05, we cannot reject the null hypothesis stating that our time series is not stationary. Therefore, our series is not stationary.</p>
+</section>
+<section id="apply-a-transformation-to-make-the-time-series-stationary" class="level3">
+<h3 class="anchored" data-anchor-id="apply-a-transformation-to-make-the-time-series-stationary">3. Apply a transformation to make the time series stationary</h3>
+<p>To remove the effect of the trend and stabilize the mean of the series, we will use differencing.</p>
+<div class="cell" data-execution_count="6">
+<div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>df_diff <span class="op">=</span> np.diff(df[<span class="st">'Passengers'</span>], n<span class="op">=</span><span class="dv">1</span>) <span class="co"># n=1 for first order differencing</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>ADF_result <span class="op">=</span> adfuller(df_diff)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'ADF Statistic: </span><span class="sc">{</span>ADF_result[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'p-value: </span><span class="sc">{</span>ADF_result[<span class="dv">1</span>]<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ADF Statistic: -2.8292668241699794
+p-value: 0.054213290283828236</code></pre>
+</div>
+</div>
+<p>This returns an ADF statistic of -2.83 and a p-value of 0.054. We can’t reject the null hypothesis, and differencing the series once did not make it stationary. We will try differencing the series again.</p>
+<div class="cell" data-execution_count="7">
+<div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>df_diff_second <span class="op">=</span> np.diff(df_diff, n<span class="op">=</span><span class="dv">1</span>) <span class="co"># n=1 for first order differencing</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>ADF_result <span class="op">=</span> adfuller(df_diff_second)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'ADF Statistic: </span><span class="sc">{</span>ADF_result[<span class="dv">0</span>]<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'p-value: </span><span class="sc">{</span>ADF_result[<span class="dv">1</span>]<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>ADF Statistic: -16.38423154246855
+p-value: 2.732891850013928e-29</code></pre>
+</div>
+</div>
+<p>Now, we can reject the null hypothesis, and our series is considered to be stationary. Since the series was differenced twice to become stationary, thus d = 2</p>
+</section>
+<section id="fitting-arima-model" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-arima-model">Fitting ARIMA model</h3>
+<div class="cell" data-execution_count="8">
+<div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> optimize_ARIMA(endog: Union[pd.Series, <span class="bu">list</span>], order_list: <span class="bu">list</span>, d: <span class="bu">int</span>) <span class="op">-&gt;</span> pd.DataFrame:</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> []</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> order <span class="kw">in</span> tqdm(order_list):</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>: </span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>            model <span class="op">=</span> SARIMAX(endog, order<span class="op">=</span>(order[<span class="dv">0</span>], d, order[<span class="dv">1</span>]), simple_differencing<span class="op">=</span><span class="va">False</span>).fit(disp<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span>:</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>        aic <span class="op">=</span> model.aic</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>        results.append([order, aic])</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>    result_df <span class="op">=</span> pd.DataFrame(results)</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    result_df.columns <span class="op">=</span> [<span class="st">'(p,q)'</span>, <span class="st">'AIC'</span>]</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Sort in ascending order, lower AIC is better</span></span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>    result_df <span class="op">=</span> result_df.sort_values(by<span class="op">=</span><span class="st">'AIC'</span>, ascending<span class="op">=</span><span class="va">True</span>).reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="9">
+<div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>ps <span class="op">=</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">13</span>, <span class="dv">1</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>qs <span class="op">=</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">13</span>, <span class="dv">1</span>)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> <span class="dv">2</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>ARIMA_order_list <span class="op">=</span> <span class="bu">list</span>(product(ps, qs))</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>train <span class="op">=</span> df[<span class="st">'Passengers'</span>][:<span class="op">-</span><span class="dv">12</span>]</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>ARIMA_result_df <span class="op">=</span> optimize_ARIMA(train, ARIMA_order_list, d)</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>ARIMA_result_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>  2%|▏         | 4/169 [00:00&lt;00:10, 15.99it/s]100%|██████████| 169/169 [19:08&lt;00:00,  6.79s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="9">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">(p,q)</th>
+<th data-quarto-table-cell-role="th">AIC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>(11, 3)</td>
+<td>1016.838772</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>(11, 4)</td>
+<td>1019.018847</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>(11, 5)</td>
+<td>1020.377574</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>(11, 1)</td>
+<td>1021.028121</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>(12, 0)</td>
+<td>1021.231718</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">164</td>
+<td>(5, 0)</td>
+<td>1281.732157</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">165</td>
+<td>(3, 0)</td>
+<td>1300.282335</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">166</td>
+<td>(2, 0)</td>
+<td>1302.913196</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">167</td>
+<td>(1, 0)</td>
+<td>1308.152194</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">168</td>
+<td>(0, 0)</td>
+<td>1311.919269</td>
+</tr>
+</tbody>
+</table>
+
+<p>169 rows × 2 columns</p>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="18">
+<div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(model_fit.summary())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                               SARIMAX Results                                
+==============================================================================
+Dep. Variable:             Passengers   No. Observations:                  132
+Model:                ARIMA(11, 2, 3)   Log Likelihood                -493.419
+Date:                Mon, 19 Feb 2024   AIC                           1016.839
+Time:                        23:33:01   BIC                           1059.852
+Sample:                    01-01-1949   HQIC                          1034.316
+                         - 12-01-1959                                         
+Covariance Type:                  opg                                         
+==============================================================================
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+ar.L1         -0.8239      0.100     -8.217      0.000      -1.020      -0.627
+ar.L2         -0.9630      0.049    -19.750      0.000      -1.059      -0.867
+ar.L3         -0.8520      0.087     -9.749      0.000      -1.023      -0.681
+ar.L4         -0.9539      0.047    -20.370      0.000      -1.046      -0.862
+ar.L5         -0.8331      0.092     -9.102      0.000      -1.013      -0.654
+ar.L6         -0.9500      0.043    -22.211      0.000      -1.034      -0.866
+ar.L7         -0.8361      0.089     -9.406      0.000      -1.010      -0.662
+ar.L8         -0.9624      0.049    -19.607      0.000      -1.059      -0.866
+ar.L9         -0.8250      0.086     -9.602      0.000      -0.993      -0.657
+ar.L10        -0.9581      0.031    -30.930      0.000      -1.019      -0.897
+ar.L11        -0.8087      0.096     -8.468      0.000      -0.996      -0.622
+ma.L1         -0.3339      0.136     -2.456      0.014      -0.600      -0.067
+ma.L2          0.2206      0.161      1.374      0.170      -0.094       0.535
+ma.L3         -0.2910      0.141     -2.061      0.039      -0.568      -0.014
+sigma2       104.3926     17.689      5.901      0.000      69.722     139.063
+===================================================================================
+Ljung-Box (L1) (Q):                   0.00   Jarque-Bera (JB):                 3.82
+Prob(Q):                              0.96   Prob(JB):                         0.15
+Heteroskedasticity (H):               2.23   Skew:                            -0.02
+Prob(H) (two-sided):                  0.01   Kurtosis:                         3.84
+===================================================================================
+
+Warnings:
+[1] Covariance matrix calculated using the outer product of gradients (complex-step).</code></pre>
+</div>
+</div>
+<p>The result shows that a value of p = 11 and q = 3 is the best fit for our model, which results in the lowest AIC value. Therefore, and ARIMA(11,2,3) model is the most suitable for our time series.</p>
+<p>We then fit an ARIMA(11,2,3) model to our time series and plot the residuals. The residuals should be normally distributed, with a mean of 0 and a constant variance. If the residuals are not normally distributed, then the model is not capturing all the information in the data. If the residuals have a mean different from 0, then the model is biased. If the variance of the residuals is not constant, then the model is not capturing all the information in the data.</p>
+<div class="cell" data-execution_count="10">
+<div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.tsa.arima.model <span class="im">import</span> ARIMA </span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> ARIMA(train, order<span class="op">=</span>(<span class="dv">11</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>model_fit <span class="op">=</span> model.fit()</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> model_fit.plot_diagnostics(figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">8</span>))</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-18-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<ul>
+<li>The top-left plot shows the residuals over time. While there is no trend in the residuals, the variance does not seem to be constant, which is a discrepancy in comparison to white noise</li>
+<li>The top-right plot shows the distribution of the residuals, which is close to a normal distribution.</li>
+<li>The bottom-left plot (Q-Q plot) displays a line that is fairly straight, indicating that the residuals are normally distributed.</li>
+<li>The bottom-right plot shows the autocorrelation of the residuals, which is close to 0 for all lags, indicating that the residuals are uncorrelated.</li>
+</ul>
+<p>Therefore, from a qualitative standpoint, it seems that our residuals are close to white noise, which is a good sign, as it means that the model’s errors are random.</p>
+<p>Our model then can be used to forecast future values of the time series.</p>
+<div class="cell" data-execution_count="17">
+<div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>test <span class="op">=</span> df.iloc[<span class="op">-</span><span class="dv">12</span>:]</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>test[<span class="st">'naive_seasonal'</span>] <span class="op">=</span> df[<span class="st">'Passengers'</span>].iloc[<span class="dv">120</span>:<span class="dv">132</span>].values</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>ARIMA_pred <span class="op">=</span> model_fit.get_prediction(<span class="dv">132</span>, <span class="dv">143</span>).predicted_mean</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>test[<span class="st">'ARIMA_pred'</span>] <span class="op">=</span> ARIMA_pred.values</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>test</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="17">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Passengers</th>
+<th data-quarto-table-cell-role="th">naive_seasonal</th>
+<th data-quarto-table-cell-role="th">ARIMA_pred</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Month</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-01</td>
+<td>417</td>
+<td>360</td>
+<td>422.368712</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-02</td>
+<td>391</td>
+<td>342</td>
+<td>410.637667</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-03</td>
+<td>419</td>
+<td>406</td>
+<td>461.827488</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-04</td>
+<td>461</td>
+<td>396</td>
+<td>457.827939</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-05</td>
+<td>472</td>
+<td>420</td>
+<td>481.698510</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-06</td>
+<td>535</td>
+<td>472</td>
+<td>531.108649</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-07</td>
+<td>622</td>
+<td>548</td>
+<td>606.151268</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-08</td>
+<td>606</td>
+<td>559</td>
+<td>615.479569</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-09</td>
+<td>508</td>
+<td>463</td>
+<td>525.628309</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-10</td>
+<td>461</td>
+<td>407</td>
+<td>467.123847</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-11</td>
+<td>390</td>
+<td>362</td>
+<td>425.079157</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-12</td>
+<td>432</td>
+<td>405</td>
+<td>467.360271</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="20">
+<div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a>ax.plot(df.index, df[<span class="st">'Passengers'</span>])</span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>ax.plot(test[<span class="st">'Passengers'</span>], <span class="st">'b-'</span>, label<span class="op">=</span><span class="st">'actual'</span>)</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>ax.plot(test[<span class="st">'naive_seasonal'</span>], <span class="st">'r:'</span>, label<span class="op">=</span><span class="st">'naive seasonal'</span>)</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>ax.plot(test[<span class="st">'ARIMA_pred'</span>], <span class="st">'k--'</span>, label<span class="op">=</span><span class="st">'ARIMA(11,2,3)'</span>)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Date'</span>)</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Number of air passengers'</span>)</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>ax.axvspan(<span class="dv">132</span>, <span class="dv">143</span>, color<span class="op">=</span><span class="st">'#808080'</span>, alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>plt.xticks(np.arange(<span class="dv">0</span>, <span class="dv">145</span>, <span class="dv">12</span>), np.arange(<span class="dv">1949</span>, <span class="dv">1962</span>, <span class="dv">1</span>))</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(<span class="dv">120</span>, <span class="dv">143</span>)</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>fig.autofmt_xdate()</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-20-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+</section>
+<section id="fitting-sarima-model" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-sarima-model">Fitting SARIMA model</h3>
+<div class="cell" data-execution_count="22">
+<div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> optimize_SARIMA(endog: Union[pd.Series, <span class="bu">list</span>], order_list: <span class="bu">list</span>, d: <span class="bu">int</span>, D: <span class="bu">int</span>, s: <span class="bu">int</span>) <span class="op">-&gt;</span> pd.DataFrame:</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    results <span class="op">=</span> []</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> order <span class="kw">in</span> tqdm(order_list):</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>        <span class="cf">try</span>: </span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>            model <span class="op">=</span> SARIMAX(</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>                endog, </span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>                order<span class="op">=</span>(order[<span class="dv">0</span>], d, order[<span class="dv">1</span>]),</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>                seasonal_order<span class="op">=</span>(order[<span class="dv">2</span>], D, order[<span class="dv">3</span>], s),</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>                simple_differencing<span class="op">=</span><span class="va">False</span>).fit(disp<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>        <span class="cf">except</span>:</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>            </span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a>        aic <span class="op">=</span> model.aic</span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a>        results.append([order, aic])</span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a>        </span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>    result_df <span class="op">=</span> pd.DataFrame(results)</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>    result_df.columns <span class="op">=</span> [<span class="st">'(p,q,P,Q)'</span>, <span class="st">'AIC'</span>]</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>    <span class="co">#Sort in ascending order, lower AIC is better</span></span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>    result_df <span class="op">=</span> result_df.sort_values(by<span class="op">=</span><span class="st">'AIC'</span>, ascending<span class="op">=</span><span class="va">True</span>).reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>    </span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> result_df</span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>ps <span class="op">=</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">1</span>)</span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>qs <span class="op">=</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">1</span>)</span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>Ps <span class="op">=</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">1</span>)</span>
+<span id="cb31-29"><a href="#cb31-29" aria-hidden="true" tabindex="-1"></a>Qs <span class="op">=</span> <span class="bu">range</span>(<span class="dv">0</span>, <span class="dv">4</span>, <span class="dv">1</span>)</span>
+<span id="cb31-30"><a href="#cb31-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-31"><a href="#cb31-31" aria-hidden="true" tabindex="-1"></a>SARIMA_order_list <span class="op">=</span> <span class="bu">list</span>(product(ps, qs, Ps, Qs))</span>
+<span id="cb31-32"><a href="#cb31-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-33"><a href="#cb31-33" aria-hidden="true" tabindex="-1"></a>train <span class="op">=</span> df[<span class="st">'Passengers'</span>][:<span class="op">-</span><span class="dv">12</span>]</span>
+<span id="cb31-34"><a href="#cb31-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-35"><a href="#cb31-35" aria-hidden="true" tabindex="-1"></a>d <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb31-36"><a href="#cb31-36" aria-hidden="true" tabindex="-1"></a>D <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb31-37"><a href="#cb31-37" aria-hidden="true" tabindex="-1"></a>s <span class="op">=</span> <span class="dv">12</span></span>
+<span id="cb31-38"><a href="#cb31-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-39"><a href="#cb31-39" aria-hidden="true" tabindex="-1"></a>SARIMA_result_df <span class="op">=</span> optimize_SARIMA(train, SARIMA_order_list, d, D, s)</span>
+<span id="cb31-40"><a href="#cb31-40" aria-hidden="true" tabindex="-1"></a>SARIMA_result_df</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>100%|██████████| 256/256 [1:06:31&lt;00:00, 15.59s/it]</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">(p,q,P,Q)</th>
+<th data-quarto-table-cell-role="th">AIC</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">0</td>
+<td>(2, 1, 1, 2)</td>
+<td>892.232482</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1</td>
+<td>(2, 1, 2, 1)</td>
+<td>893.527182</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">2</td>
+<td>(2, 1, 1, 3)</td>
+<td>894.093579</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">3</td>
+<td>(1, 0, 1, 2)</td>
+<td>894.287516</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">4</td>
+<td>(0, 1, 1, 2)</td>
+<td>894.987878</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">...</td>
+<td>...</td>
+<td>...</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">250</td>
+<td>(0, 0, 2, 0)</td>
+<td>906.940147</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">251</td>
+<td>(3, 2, 0, 3)</td>
+<td>907.181875</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">252</td>
+<td>(0, 0, 3, 2)</td>
+<td>907.514319</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">253</td>
+<td>(0, 0, 3, 0)</td>
+<td>908.742583</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">254</td>
+<td>(0, 0, 0, 3)</td>
+<td>908.781405</td>
+</tr>
+</tbody>
+</table>
+
+<p>255 rows × 2 columns</p>
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="24">
+<div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>SARIMA_model <span class="op">=</span> SARIMAX(train, order<span class="op">=</span>(<span class="dv">2</span>,<span class="dv">1</span>,<span class="dv">1</span>), seasonal_order<span class="op">=</span>(<span class="dv">1</span>,<span class="dv">1</span>,<span class="dv">2</span>,<span class="dv">12</span>), simple_differencing<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>SARIMA_model_fit <span class="op">=</span> SARIMA_model.fit(disp<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(SARIMA_model_fit.summary())</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>                                        SARIMAX Results                                        
+===============================================================================================
+Dep. Variable:                              Passengers   No. Observations:                  132
+Model:             SARIMAX(2, 1, 1)x(1, 1, [1, 2], 12)   Log Likelihood                -439.116
+Date:                                 Tue, 20 Feb 2024   AIC                            892.232
+Time:                                         10:19:10   BIC                            911.686
+Sample:                                     01-01-1949   HQIC                           900.132
+                                          - 12-01-1959                                         
+Covariance Type:                                   opg                                         
+==============================================================================
+                 coef    std err          z      P&gt;|z|      [0.025      0.975]
+------------------------------------------------------------------------------
+ar.L1         -1.2665      0.085    -14.945      0.000      -1.433      -1.100
+ar.L2         -0.3404      0.077     -4.401      0.000      -0.492      -0.189
+ma.L1          0.9997      0.666      1.502      0.133      -0.305       2.305
+ar.S.L12       0.9993      0.111      9.043      0.000       0.783       1.216
+ma.S.L12      -1.3391      2.067     -0.648      0.517      -5.390       2.712
+ma.S.L24       0.3581      0.655      0.546      0.585      -0.926       1.642
+sigma2        78.2020    148.583      0.526      0.599    -213.015     369.419
+===================================================================================
+Ljung-Box (L1) (Q):                   0.06   Jarque-Bera (JB):                 0.90
+Prob(Q):                              0.80   Prob(JB):                         0.64
+Heteroskedasticity (H):               1.56   Skew:                            -0.08
+Prob(H) (two-sided):                  0.16   Kurtosis:                         3.39
+===================================================================================
+
+Warnings:
+[1] Covariance matrix calculated using the outer product of gradients (complex-step).</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="25">
+<div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>SARIMA_model_fit.plot_diagnostics(figsize<span class="op">=</span>(<span class="dv">10</span>,<span class="dv">8</span>))<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-23-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>The final test to determine whether we can use this model for forecasting or not is the Ljung-Box test.</p>
+<div class="cell" data-execution_count="43">
+<div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.stats.diagnostic <span class="im">import</span> acorr_ljungbox</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>residuals <span class="op">=</span> SARIMA_model_fit.resid</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>df_stats <span class="op">=</span> acorr_ljungbox(residuals.values, lags<span class="op">=</span> np.arange(<span class="dv">1</span>, <span class="dv">11</span>, <span class="dv">1</span>))</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>df_stats</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="43">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">lb_stat</th>
+<th data-quarto-table-cell-role="th">lb_pvalue</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1</td>
+<td>0.004873</td>
+<td>0.944347</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">2</td>
+<td>0.745767</td>
+<td>0.688746</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">3</td>
+<td>1.022897</td>
+<td>0.795712</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">4</td>
+<td>1.227105</td>
+<td>0.873616</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">5</td>
+<td>1.436496</td>
+<td>0.920280</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">6</td>
+<td>1.712124</td>
+<td>0.944181</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">7</td>
+<td>2.308987</td>
+<td>0.940781</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">8</td>
+<td>2.719618</td>
+<td>0.950703</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">9</td>
+<td>2.736189</td>
+<td>0.973843</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">10</td>
+<td>4.969893</td>
+<td>0.893180</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>The returned p-values are all greater than 0.05. Therefore, we do not reject the null hypothesis, and we conclude that the residuals are independent and uncorrelated, just like white noise. Our model has passed all the tests from the residuals analysis, and we are ready to use it for forecasting.</p>
+<div class="cell" data-execution_count="49">
+<div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>SARIMA_pred <span class="op">=</span> SARIMA_model_fit.get_prediction(<span class="dv">132</span>, <span class="dv">143</span>).predicted_mean</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>test[<span class="st">'SARIMA_pred'</span>] <span class="op">=</span> SARIMA_pred.values</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>test</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display" data-execution_count="49">
+<div>
+
+
+<table class="dataframe table table-sm table-striped small" data-quarto-postprocess="true" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Passengers</th>
+<th data-quarto-table-cell-role="th">naive_seasonal</th>
+<th data-quarto-table-cell-role="th">ARIMA_pred</th>
+<th data-quarto-table-cell-role="th">SARIMA_pred</th>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Month</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-01</td>
+<td>417</td>
+<td>360</td>
+<td>422.368712</td>
+<td>418.513901</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-02</td>
+<td>391</td>
+<td>342</td>
+<td>410.637667</td>
+<td>399.577187</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-03</td>
+<td>419</td>
+<td>406</td>
+<td>461.827488</td>
+<td>461.313429</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-04</td>
+<td>461</td>
+<td>396</td>
+<td>457.827939</td>
+<td>451.452634</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-05</td>
+<td>472</td>
+<td>420</td>
+<td>481.698510</td>
+<td>473.744198</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-06</td>
+<td>535</td>
+<td>472</td>
+<td>531.108649</td>
+<td>538.788480</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-07</td>
+<td>622</td>
+<td>548</td>
+<td>606.151268</td>
+<td>612.440323</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-08</td>
+<td>606</td>
+<td>559</td>
+<td>615.479569</td>
+<td>624.594874</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-09</td>
+<td>508</td>
+<td>463</td>
+<td>525.628309</td>
+<td>520.173138</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-10</td>
+<td>461</td>
+<td>407</td>
+<td>467.123847</td>
+<td>462.852995</td>
+</tr>
+<tr class="odd">
+<td data-quarto-table-cell-role="th">1960-11</td>
+<td>390</td>
+<td>362</td>
+<td>425.079157</td>
+<td>412.723148</td>
+</tr>
+<tr class="even">
+<td data-quarto-table-cell-role="th">1960-12</td>
+<td>432</td>
+<td>405</td>
+<td>467.360271</td>
+<td>454.252799</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div class="cell" data-execution_count="50">
+<div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>ax.plot(df.index, df[<span class="st">'Passengers'</span>])</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>ax.plot(test[<span class="st">'Passengers'</span>], <span class="st">'b-'</span>, label<span class="op">=</span><span class="st">'actual'</span>)</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>ax.plot(test[<span class="st">'naive_seasonal'</span>], <span class="st">'r:'</span>, label<span class="op">=</span><span class="st">'naive seasonal'</span>)</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>ax.plot(test[<span class="st">'ARIMA_pred'</span>], <span class="st">'k--'</span>, label<span class="op">=</span><span class="st">'ARIMA(11,2,3)'</span>)</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>ax.plot(test[<span class="st">'SARIMA_pred'</span>], <span class="st">'g-.'</span>, label<span class="op">=</span><span class="st">'SARIMA(2,1,1)(1,1,2,12)'</span>)</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Date'</span>)</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'Number of air passengers'</span>)</span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>ax.axvspan(<span class="dv">132</span>, <span class="dv">143</span>, color<span class="op">=</span><span class="st">'#808080'</span>, alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-13"><a href="#cb38-13" aria-hidden="true" tabindex="-1"></a>ax.legend(loc<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb38-14"><a href="#cb38-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-15"><a href="#cb38-15" aria-hidden="true" tabindex="-1"></a>plt.xticks(np.arange(<span class="dv">0</span>, <span class="dv">145</span>, <span class="dv">12</span>), np.arange(<span class="dv">1949</span>, <span class="dv">1962</span>, <span class="dv">1</span>))</span>
+<span id="cb38-16"><a href="#cb38-16" aria-hidden="true" tabindex="-1"></a>ax.set_xlim(<span class="dv">120</span>, <span class="dv">143</span>)</span>
+<span id="cb38-17"><a href="#cb38-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb38-18"><a href="#cb38-18" aria-hidden="true" tabindex="-1"></a>fig.autofmt_xdate()</span>
+<span id="cb38-19"><a href="#cb38-19" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-26-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>We’ll use the mean absolute percentage error (MAPE) to evaluate each model.</p>
+<div class="cell" data-execution_count="54">
+<div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> mape(y_true, y_pred):</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.mean(np.<span class="bu">abs</span>((y_true <span class="op">-</span> y_pred) <span class="op">/</span> y_true)) <span class="op">*</span> <span class="dv">100</span></span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a>mape_naive_seasonal <span class="op">=</span> mape(test[<span class="st">'Passengers'</span>], test[<span class="st">'naive_seasonal'</span>])</span>
+<span id="cb39-6"><a href="#cb39-6" aria-hidden="true" tabindex="-1"></a>mape_ARIMA <span class="op">=</span> mape(test[<span class="st">'Passengers'</span>], test[<span class="st">'ARIMA_pred'</span>])</span>
+<span id="cb39-7"><a href="#cb39-7" aria-hidden="true" tabindex="-1"></a>mape_SARIMA <span class="op">=</span> mape(test[<span class="st">'Passengers'</span>], test[<span class="st">'SARIMA_pred'</span>])</span>
+<span id="cb39-8"><a href="#cb39-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-9"><a href="#cb39-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'MAPE Naive Seasonal: </span><span class="sc">{</span>mape_naive_seasonal<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb39-10"><a href="#cb39-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'MAPE ARIMA: </span><span class="sc">{</span>mape_ARIMA<span class="sc">}</span><span class="ss">'</span>)</span>
+<span id="cb39-11"><a href="#cb39-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f'MAPE SARIMA: </span><span class="sc">{</span>mape_SARIMA<span class="sc">}</span><span class="ss">'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MAPE Naive Seasonal: 9.987532920823485
+MAPE ARIMA: 3.8410155255655063
+MAPE SARIMA: 2.8487689091201363</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="55">
+<div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots()</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>x <span class="op">=</span> [<span class="st">'naive seasonal'</span>, <span class="st">'ARIMA(11,2,3)'</span>, <span class="st">'SARIMA(2,1,1)(1,1,2,12)'</span>]</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> [mape_naive_seasonal, mape_ARIMA, mape_SARIMA]</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>ax.bar(x, y, width<span class="op">=</span><span class="fl">0.4</span>)</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">'Models'</span>)</span>
+<span id="cb41-8"><a href="#cb41-8" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">'MAPE (%)'</span>)</span>
+<span id="cb41-9"><a href="#cb41-9" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(<span class="dv">0</span>, <span class="dv">15</span>)</span>
+<span id="cb41-10"><a href="#cb41-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-11"><a href="#cb41-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> index, value <span class="kw">in</span> <span class="bu">enumerate</span>(y):</span>
+<span id="cb41-12"><a href="#cb41-12" aria-hidden="true" tabindex="-1"></a>    plt.text(x<span class="op">=</span>index, y<span class="op">=</span>value <span class="op">+</span> <span class="dv">1</span>, s<span class="op">=</span><span class="bu">str</span>(<span class="bu">round</span>(value,<span class="dv">2</span>)), ha<span class="op">=</span><span class="st">'center'</span>)</span>
+<span id="cb41-13"><a href="#cb41-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-14"><a href="#cb41-14" aria-hidden="true" tabindex="-1"></a>plt.tight_layout()</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-28-output-1.png" class="img-fluid"></p>
+</div>
+</div>
 </section>
 </section>
 <section id="reference" class="level2">
