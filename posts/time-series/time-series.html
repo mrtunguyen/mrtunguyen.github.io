@@ -218,15 +218,17 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#neuralprophet" id="toc-neuralprophet" class="nav-link" data-scroll-target="#neuralprophet">NeuralProphet</a></li>
   <li><a href="#pytorch-forecasting" id="toc-pytorch-forecasting" class="nav-link" data-scroll-target="#pytorch-forecasting">pytorch-forecasting</a></li>
   </ul></li>
-  <li><a href="#practice" id="toc-practice" class="nav-link" data-scroll-target="#practice">Practice</a>
+  <li><a href="#practical-example" id="toc-practical-example" class="nav-link" data-scroll-target="#practical-example">Practical example</a>
   <ul class="collapse">
+  <li><a href="#dataset-overview" id="toc-dataset-overview" class="nav-link" data-scroll-target="#dataset-overview">Dataset overview</a></li>
   <li><a href="#identify-and-visualize-the-seasonal-component-of-the-time-series" id="toc-identify-and-visualize-the-seasonal-component-of-the-time-series" class="nav-link" data-scroll-target="#identify-and-visualize-the-seasonal-component-of-the-time-series">1. Identify and visualize the seasonal component of the time series</a></li>
   <li><a href="#apply-the-adf-test-to-check-if-the-time-series-is-stationary" id="toc-apply-the-adf-test-to-check-if-the-time-series-is-stationary" class="nav-link" data-scroll-target="#apply-the-adf-test-to-check-if-the-time-series-is-stationary">2. Apply the ADF test to check if the time series is stationary</a></li>
   <li><a href="#apply-a-transformation-to-make-the-time-series-stationary" id="toc-apply-a-transformation-to-make-the-time-series-stationary" class="nav-link" data-scroll-target="#apply-a-transformation-to-make-the-time-series-stationary">3. Apply a transformation to make the time series stationary</a></li>
   <li><a href="#fitting-arima-model" id="toc-fitting-arima-model" class="nav-link" data-scroll-target="#fitting-arima-model">Fitting ARIMA model</a></li>
   <li><a href="#fitting-sarima-model" id="toc-fitting-sarima-model" class="nav-link" data-scroll-target="#fitting-sarima-model">Fitting SARIMA model</a></li>
+  <li><a href="#prophet-2" id="toc-prophet-2" class="nav-link" data-scroll-target="#prophet-2">Prophet</a></li>
   </ul></li>
-  <li><a href="#reference" id="toc-reference" class="nav-link" data-scroll-target="#reference">Reference</a></li>
+  <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
 </nav>
     </div>
@@ -703,8 +705,8 @@ One single 1D convolutional layer receives an input tensor of shape (batch_size,
 <p>This <a href="https://github.com/jdb78/pytorch-forecasting">repo</a> is quite nice since it provides a training pipeline on pandas dataframes and leverages Pytorch Lightning for scalable training on multiple GPUs. It includes DeepAR, N-BEATS, and Temporal Fusion Transformers.</p>
 </section>
 </section>
-<section id="practice" class="level2">
-<h2 class="anchored" data-anchor-id="practice">Practice</h2>
+<section id="practical-example" class="level2">
+<h2 class="anchored" data-anchor-id="practical-example">Practical example</h2>
 <div class="cell" data-execution_count="23">
 <div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> mean_squared_error, mean_absolute_error</span>
 <span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> statsmodels.graphics.tsaplots <span class="im">import</span> plot_acf, plot_pacf</span>
@@ -727,6 +729,8 @@ One single 1D convolutional layer receives an input tensor of shape (batch_size,
 <span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> warnings</span>
 <span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>warnings.filterwarnings(<span class="st">'ignore'</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </div>
+<section id="dataset-overview" class="level3">
+<h3 class="anchored" data-anchor-id="dataset-overview">Dataset overview</h3>
 <p>We will go back to our dataset in the first section to try out some practices.</p>
 <blockquote class="blockquote">
 <p>The Airline Passengers dataset describes the total number of airline passengers over a period of time. The units are a count of the number of airline passengers in thousands. There are 144 monthly observations from 1949 to 1960.</p>
@@ -778,6 +782,7 @@ One single 1D convolutional layer receives an input tensor of shape (batch_size,
 </div>
 </div>
 </div>
+</section>
 <section id="identify-and-visualize-the-seasonal-component-of-the-time-series" class="level3">
 <h3 class="anchored" data-anchor-id="identify-and-visualize-the-seasonal-component-of-the-time-series">1. Identify and visualize the seasonal component of the time series</h3>
 <div class="cell" data-execution_count="4">
@@ -1582,15 +1587,61 @@ MAPE SARIMA: 2.8487689091201363</code></pre>
 <p><img src="time-series_files/figure-html/cell-28-output-1.png" class="img-fluid"></p>
 </div>
 </div>
+<p>So the SARIMA model is the better performing method for this situation compared to our naive and ARIMA models. This makes sense, since our dataset had clear seasonality, and the SARIMA model is built to use the seasonal properties of time series to make forecasts.</p>
+</section>
+<section id="prophet-2" class="level3">
+<h3 class="anchored" data-anchor-id="prophet-2">Prophet</h3>
+<p>Prophet follows the sklearn API, where a model is initialized by creating an instance of the Prophet class, the model is trained using the fit method, and predictions are generated using the predict method. Therefore, we’ll first initialize a Prophet model by creating an instance of the Prophet class</p>
+<div class="cell" data-execution_count="62">
+<div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> prophet <span class="im">import</span> Prophet</span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>model <span class="op">=</span> Prophet()</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>train <span class="op">=</span> train.reset_index().rename(columns<span class="op">=</span>{<span class="st">'Month'</span>:<span class="st">'ds'</span>, <span class="st">'Passengers'</span>:<span class="st">'y'</span>})</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>test <span class="op">=</span> test.reset_index().rename(columns<span class="op">=</span>{<span class="st">'Month'</span>:<span class="st">'ds'</span>, <span class="st">'Passengers'</span>:<span class="st">'y'</span>})</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>model.fit(train)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>14:07:39 - cmdstanpy - INFO - Chain [1] start processing
+14:07:41 - cmdstanpy - INFO - Chain [1] done processing</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="62">
+<pre><code>&lt;prophet.forecaster.Prophet at 0x2a3f1b810&gt;</code></pre>
+</div>
+</div>
+<div class="cell" data-execution_count="63">
+<div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a>prophet_pred <span class="op">=</span> model.predict(test)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+</div>
+<div class="cell" data-execution_count="83">
+<div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"MAPE prophet: </span><span class="sc">{</span>mape(test[<span class="st">'y'</span>], prophet_pred[<span class="st">'yhat'</span>])<span class="sc">}</span><span class="ss">"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>MAPE prophet: 6.615923942230125</code></pre>
+</div>
+</div>
+<p>Prophet comes with many methods that allow us to quickly visualize a model’s predic- tions or its different components.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb48"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a>_ <span class="op">=</span> model.plot(prophet_pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-32-output-1.png" class="img-fluid"></p>
+</div>
+</div>
+<p>We can also display the different components used in our model</p>
+<div class="cell" data-execution_count="77">
+<div class="sourceCode cell-code" id="cb49"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>fig2 <span class="op">=</span> model.plot_components(prophet_pred)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="cell-output cell-output-display">
+<p><img src="time-series_files/figure-html/cell-33-output-1.png" class="img-fluid"></p>
+</div>
+</div>
 </section>
 </section>
-<section id="reference" class="level2">
-<h2 class="anchored" data-anchor-id="reference">Reference</h2>
+<section id="references" class="level2">
+<h2 class="anchored" data-anchor-id="references">References</h2>
 <ol type="1">
-<li>Time Series Forecasting in Python by Marco Peixeiro</li>
+<li><a href="https://www.manning.com/books/time-series-forecasting-in-python-book">Time Series Forecasting in Python</a> by Marco Peixeiro</li>
 <li>Machine Learning for Time Series with Python By Ben Auffarth</li>
-<li><a href="https://github.com/unit8co/darts">Darts</a></li>
+<li>Darts</li>
 </ol>
+<p>If you liked this article, please follow me on <a href="https://medium.com/@jonathan.tunguyen">Medium</a> and Twitter <a href="https://twitter.com/jonathan_ttu"><span class="citation" data-cites="jonathan_ttu">@jonathan_ttu</span></a>.</p>
 
 
 </section>
