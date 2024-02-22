@@ -226,7 +226,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   <li><a href="#apply-a-transformation-to-make-the-time-series-stationary" id="toc-apply-a-transformation-to-make-the-time-series-stationary" class="nav-link" data-scroll-target="#apply-a-transformation-to-make-the-time-series-stationary">3. Apply a transformation to make the time series stationary</a></li>
   <li><a href="#fitting-arima-model" id="toc-fitting-arima-model" class="nav-link" data-scroll-target="#fitting-arima-model">Fitting ARIMA model</a></li>
   <li><a href="#fitting-sarima-model" id="toc-fitting-sarima-model" class="nav-link" data-scroll-target="#fitting-sarima-model">Fitting SARIMA model</a></li>
-  <li><a href="#prophet-2" id="toc-prophet-2" class="nav-link" data-scroll-target="#prophet-2">Prophet</a></li>
+  <li><a href="#fitting-prophet" id="toc-fitting-prophet" class="nav-link" data-scroll-target="#fitting-prophet">Fitting Prophet</a></li>
   </ul></li>
   <li><a href="#references" id="toc-references" class="nav-link" data-scroll-target="#references">References</a></li>
   </ul>
@@ -1589,8 +1589,8 @@ MAPE SARIMA: 2.8487689091201363</code></pre>
 </div>
 <p>So the SARIMA model is the better performing method for this situation compared to our naive and ARIMA models. This makes sense, since our dataset had clear seasonality, and the SARIMA model is built to use the seasonal properties of time series to make forecasts.</p>
 </section>
-<section id="prophet-2" class="level3">
-<h3 class="anchored" data-anchor-id="prophet-2">Prophet</h3>
+<section id="fitting-prophet" class="level3">
+<h3 class="anchored" data-anchor-id="fitting-prophet">Fitting Prophet</h3>
 <p>Prophet follows the sklearn API, where a model is initialized by creating an instance of the Prophet class, the model is trained using the fit method, and predictions are generated using the predict method. Therefore, we’ll first initialize a Prophet model by creating an instance of the Prophet class</p>
 <div class="cell" data-execution_count="62">
 <div class="sourceCode cell-code" id="cb42"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> prophet <span class="im">import</span> Prophet</span>
@@ -1639,7 +1639,8 @@ MAPE SARIMA: 2.8487689091201363</code></pre>
 <ol type="1">
 <li><a href="https://www.manning.com/books/time-series-forecasting-in-python-book">Time Series Forecasting in Python</a> by Marco Peixeiro</li>
 <li>Machine Learning for Time Series with Python By Ben Auffarth</li>
-<li>Darts</li>
+<li><a href="https://github.com/facebook/prophet">Prophet: Tool for producing high quality forecasts for time series data that has multiple seasonality with linear or non-linear growth.</a></li>
+<li><a href="https://github.com/unit8co/darts">Darts</a></li>
 </ol>
 <p>If you liked this article, please follow me on <a href="https://medium.com/@jonathan.tunguyen">Medium</a> and Twitter <a href="https://twitter.com/jonathan_ttu"><span class="citation" data-cites="jonathan_ttu">@jonathan_ttu</span></a>.</p>
 
